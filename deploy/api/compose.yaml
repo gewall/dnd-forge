@@ -1,0 +1,21 @@
+# ~/apps/dnd-forge-api/compose.yaml di VPS.
+# Port hanya di 127.0.0.1: Docker melewati UFW, jadi jangan publish tanpa alamat.
+services:
+  api:
+    image: ${API_IMAGE:-ghcr.io/gewall/dnd-forge-api:latest}
+    pull_policy: always
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: Asia/Jakarta
+    ports:
+      - "127.0.0.1:${APP_PORT:-8092}:8080"
+    mem_limit: 256m
+    networks: [default, dbnet, garage]
+
+networks:
+  dbnet:
+    external: true # host "postgres" selalu menunjuk ke primary
+  garage:
+    external: true
+    name: garage_default # S3 internal: http://garage:3900

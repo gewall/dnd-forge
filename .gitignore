@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+
+# Go
+*.test
+*.out
+/api/bin/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
