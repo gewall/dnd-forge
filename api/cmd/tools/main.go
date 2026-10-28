@@ -122,7 +122,7 @@ func openAPI(args []string) error {
 		_, err = os.Stdout.Write(doc)
 		return err
 	}
-	return os.WriteFile(*out, doc, 0o644)
+	return os.WriteFile(*out, doc, 0o600)
 }
 
 func genKeys() error {

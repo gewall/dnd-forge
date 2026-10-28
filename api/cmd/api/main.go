@@ -98,11 +98,12 @@ func healthcheck() int {
 		addr = ":8080"
 	}
 	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get("http://127.0.0.1" + addr + "/healthz")
+	// The target is always this container's own loopback listener.
+	resp, err := client.Get("http://127.0.0.1" + addr + "/healthz") //nolint:gosec // G704: loopback only
 	if err != nil {
 		return 1
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return 1
 	}
