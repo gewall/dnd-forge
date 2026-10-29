@@ -55,9 +55,20 @@ jobs:
           go run ./cmd/tools openapi -o openapi.json
           git diff --exit-code -- openapi.json
 
-      - run: go test -race ./...
+      # nodynamic: test the same pure-Go WebP encoder the image ships.
+      - run: go test -race -tags nodynamic ./...
       # Integration tests share one database, so packages run one at a time.
-      - run: go test -race -p 1 -tags integration ./...
+      - run: go test -race -p 1 -tags integration,nodynamic ./...
+
+      - name: release binaries are static
+        run: |
+          for cmd in api tools; do
+            CGO_ENABLED=0 go build -tags nodynamic -o "/tmp/$cmd" "./cmd/$cmd"
+            if readelf -l "/tmp/$cmd" | grep -q INTERP; then
+              echo "::error::$cmd is dynamically linked; it will not start on distroless/static"
+              exit 1
+            fi
+          done
 
   image:
     needs: test

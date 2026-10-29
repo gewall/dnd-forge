@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
-# Fase 2 belum memakai libvips, jadi binary statis (CGO off) di atas distroless.
-# Saat upload gambar (govips) masuk di fase 4, ganti ke golang:*-bookworm + libvips-dev
-# dan runtime debian:bookworm-slim + libvips42.
+# Binary statis (CGO off) di atas distroless. Tag `nodynamic` wajib: tanpa itu
+# gen2brain/webp memakai purego untuk mencari libwebp sistem, binary jadi ter-link
+# dinamis, dan container gagal start ("exec /app/api: no such file or directory").
 
 FROM golang:1.27-alpine AS build
 WORKDIR /src
@@ -11,8 +11,8 @@ RUN --mount=type=cache,target=/go/pkg/mod go mod download
 COPY . .
 ARG VERSION=dev
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/api ./cmd/api && \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/tools ./cmd/tools
+    CGO_ENABLED=0 go build -tags nodynamic -trimpath -ldflags="-s -w" -o /out/api ./cmd/api && \
+    CGO_ENABLED=0 go build -tags nodynamic -trimpath -ldflags="-s -w" -o /out/tools ./cmd/tools
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/api /out/tools /app/
