@@ -230,7 +230,7 @@ func mapErr(err, notFound error) error {
 // mapArticleErr also covers the category foreign key: writing an article
 // into a missing category.
 func mapArticleErr(err error) error {
-	if db.IsForeignKeyViolation(err) {
+	if db.IsForeignKeyViolation(err) && db.ViolatedConstraint(err) == "guide_articles_category_id_fkey" {
 		return ErrCategoryNotFound
 	}
 	return mapErr(err, ErrArticleNotFound)

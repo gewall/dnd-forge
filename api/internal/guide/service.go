@@ -169,7 +169,10 @@ func (s *Service) CreateArticle(ctx context.Context, actor uuid.UUID, in Article
 	if !slug.Valid(in.Slug) {
 		return Article{}, ErrInvalidSlug
 	}
-	a := Article{AuthorID: &actor, ArticleInput: in}
+	a := Article{ArticleInput: in}
+	if actor != uuid.Nil { // the system (seeding) is not an author
+		a.AuthorID = &actor
+	}
 	if in.Status == StatusPublished {
 		now := s.now()
 		a.PublishedAt = &now

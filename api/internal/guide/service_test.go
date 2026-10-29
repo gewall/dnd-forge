@@ -238,6 +238,17 @@ func TestSearchValidation(t *testing.T) {
 	}
 }
 
+func TestSystemActorIsNotAuthor(t *testing.T) {
+	f := newFixture(t)
+	a, err := f.svc.CreateArticle(context.Background(), uuid.Nil, f.article("sistem", StatusDraft))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.AuthorID != nil {
+		t.Errorf("AuthorID = %v, want nil for the system actor", a.AuthorID)
+	}
+}
+
 func TestDeleteCategoryInUse(t *testing.T) {
 	ctx := context.Background()
 	f := newFixture(t)

@@ -120,8 +120,7 @@ func (s *PostgresStore) CreateSubrace(ctx context.Context, raceID uuid.UUID, in 
 		Traits: mustJSON(in.Traits), VisualPrompt: in.VisualPrompt, IsActive: in.IsActive,
 	})
 	if err != nil {
-		// The only foreign key here is race_id.
-		if db.IsForeignKeyViolation(err) {
+		if db.IsForeignKeyViolation(err) && db.ViolatedConstraint(err) == "subraces_race_id_fkey" {
 			return Subrace{}, ErrRaceNotFound
 		}
 		return Subrace{}, mapErr(err, ErrSubraceNotFound)

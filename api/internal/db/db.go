@@ -129,6 +129,14 @@ func IsUniqueViolation(err error) bool { return hasCode(err, "23505") }
 // e.g. deleting a row other rows still reference.
 func IsForeignKeyViolation(err error) bool { return hasCode(err, "23503") }
 
+// ViolatedConstraint returns the name of the constraint err violated, or "".
+func ViolatedConstraint(err error) string {
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
+		return pgErr.ConstraintName
+	}
+	return ""
+}
+
 func hasCode(err error, code string) bool {
 	pgErr, ok := errors.AsType[*pgconn.PgError](err)
 	return ok && pgErr.Code == code
