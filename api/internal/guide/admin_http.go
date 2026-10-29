@@ -45,18 +45,18 @@ func (h *Handler) registerAdmin(api huma.API) {
 type CategoryRequest struct {
 	Slug        string `json:"slug" pattern:"^[a-z0-9]+(-[a-z0-9]+)*$" maxLength:"64"`
 	Title       string `json:"title" minLength:"1" maxLength:"120"`
-	Description string `json:"description" maxLength:"1000"`
-	SortOrder   int    `json:"sortOrder" minimum:"0" maximum:"10000"`
+	Description string `json:"description,omitempty" maxLength:"1000"`
+	SortOrder   int    `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 }
 
 type ArticleRequest struct {
 	CategoryID uuid.UUID `json:"categoryId"`
 	Slug       string    `json:"slug" pattern:"^[a-z0-9]+(-[a-z0-9]+)*$" maxLength:"64"`
 	Title      string    `json:"title" minLength:"1" maxLength:"160"`
-	Excerpt    string    `json:"excerpt" maxLength:"500"`
-	Content    string    `json:"content" maxLength:"200000" doc:"Markdown"`
+	Excerpt    string    `json:"excerpt,omitempty" maxLength:"500"`
+	Content    string    `json:"content,omitempty" maxLength:"200000" doc:"Markdown"`
 	CoverKey   string    `json:"coverKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$" doc:"key dari POST /v1/admin/uploads"`
-	SortOrder  int       `json:"sortOrder" minimum:"0" maximum:"10000"`
+	SortOrder  int       `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	Status     Status    `json:"status" enum:"DRAFT,PUBLISHED"`
 }
 

@@ -56,20 +56,20 @@ func (h *Handler) registerAdmin(api huma.API) {
 type RaceRequest struct {
 	Slug         string     `json:"slug" pattern:"^[a-z0-9]+(-[a-z0-9]+)*$" maxLength:"64"`
 	Name         string     `json:"name" minLength:"1" maxLength:"80"`
-	Description  string     `json:"description" maxLength:"8000"`
-	Traits       []TraitDTO `json:"traits" maxItems:"30"`
-	VisualPrompt string     `json:"visualPrompt" maxLength:"500" doc:"Bahasa Inggris, dipakai prompt gambar"`
+	Description  string     `json:"description,omitempty" maxLength:"8000"`
+	Traits       []TraitDTO `json:"traits,omitempty" maxItems:"30"`
+	VisualPrompt string     `json:"visualPrompt,omitempty" maxLength:"500" doc:"Bahasa Inggris, dipakai prompt gambar"`
 	ImageKey     string     `json:"imageKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$" doc:"key dari POST /v1/admin/uploads"`
-	SortOrder    int        `json:"sortOrder" minimum:"0" maximum:"10000"`
+	SortOrder    int        `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	IsActive     bool       `json:"isActive"`
 }
 
 type SubraceRequest struct {
 	Slug         string     `json:"slug" pattern:"^[a-z0-9]+(-[a-z0-9]+)*$" maxLength:"64"`
 	Name         string     `json:"name" minLength:"1" maxLength:"80"`
-	Description  string     `json:"description" maxLength:"8000"`
-	Traits       []TraitDTO `json:"traits" maxItems:"30"`
-	VisualPrompt string     `json:"visualPrompt" maxLength:"500"`
+	Description  string     `json:"description,omitempty" maxLength:"8000"`
+	Traits       []TraitDTO `json:"traits,omitempty" maxItems:"30"`
+	VisualPrompt string     `json:"visualPrompt,omitempty" maxLength:"500"`
 	IsActive     bool       `json:"isActive"`
 }
 
@@ -78,22 +78,22 @@ type ClassRequest struct {
 	Name           string     `json:"name" minLength:"1" maxLength:"80"`
 	HitDie         int        `json:"hitDie" enum:"6,8,10,12"`
 	PrimaryAbility string     `json:"primaryAbility" minLength:"1" maxLength:"60"`
-	Description    string     `json:"description" maxLength:"8000"`
-	Features       []TraitDTO `json:"features" maxItems:"40"`
-	VisualPrompt   string     `json:"visualPrompt" maxLength:"500"`
+	Description    string     `json:"description,omitempty" maxLength:"8000"`
+	Features       []TraitDTO `json:"features,omitempty" maxItems:"40"`
+	VisualPrompt   string     `json:"visualPrompt,omitempty" maxLength:"500"`
 	ImageKey       string     `json:"imageKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$"`
-	SortOrder      int        `json:"sortOrder" minimum:"0" maximum:"10000"`
+	SortOrder      int        `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	IsActive       bool       `json:"isActive"`
 }
 
 type BackgroundRequest struct {
 	Slug               string   `json:"slug" pattern:"^[a-z0-9]+(-[a-z0-9]+)*$" maxLength:"64"`
 	Name               string   `json:"name" minLength:"1" maxLength:"80"`
-	Description        string   `json:"description" maxLength:"8000"`
-	SkillProficiencies []string `json:"skillProficiencies" maxItems:"10"`
-	VisualPrompt       string   `json:"visualPrompt" maxLength:"500"`
+	Description        string   `json:"description,omitempty" maxLength:"8000"`
+	SkillProficiencies []string `json:"skillProficiencies,omitempty" maxItems:"10"`
+	VisualPrompt       string   `json:"visualPrompt,omitempty" maxLength:"500"`
 	ImageKey           string   `json:"imageKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$"`
-	SortOrder          int      `json:"sortOrder" minimum:"0" maximum:"10000"`
+	SortOrder          int      `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	IsActive           bool     `json:"isActive"`
 }
 

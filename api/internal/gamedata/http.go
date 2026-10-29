@@ -52,7 +52,7 @@ func (h *Handler) registerPublic(api huma.API) {
 
 type TraitDTO struct {
 	Name        string `json:"name" minLength:"1" maxLength:"120"`
-	Description string `json:"description" maxLength:"4000"`
+	Description string `json:"description,omitempty" maxLength:"4000"`
 }
 
 type SubraceDTO struct {
