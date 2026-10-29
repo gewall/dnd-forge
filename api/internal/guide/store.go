@@ -58,7 +58,7 @@ func (s *PostgresStore) CategoryByID(ctx context.Context, id uuid.UUID) (Categor
 
 func (s *PostgresStore) CreateCategory(ctx context.Context, in CategoryInput) (Category, error) {
 	row, err := s.q.CreateGuideCategory(ctx, sqlc.CreateGuideCategoryParams{
-		Slug: in.Slug, Title: in.Title, Description: in.Description, SortOrder: int32(in.SortOrder),
+		Slug: in.Slug, Title: in.Title, Description: in.Description, SortOrder: db.Int32(in.SortOrder),
 	})
 	if err != nil {
 		return Category{}, mapErr(err, ErrCategoryNotFound)
@@ -68,7 +68,7 @@ func (s *PostgresStore) CreateCategory(ctx context.Context, in CategoryInput) (C
 
 func (s *PostgresStore) UpdateCategory(ctx context.Context, id uuid.UUID, in CategoryInput) (Category, error) {
 	row, err := s.q.UpdateGuideCategory(ctx, sqlc.UpdateGuideCategoryParams{
-		ID: id, Slug: in.Slug, Title: in.Title, Description: in.Description, SortOrder: int32(in.SortOrder),
+		ID: id, Slug: in.Slug, Title: in.Title, Description: in.Description, SortOrder: db.Int32(in.SortOrder),
 	})
 	if err != nil {
 		return Category{}, mapErr(err, ErrCategoryNotFound)
@@ -122,7 +122,7 @@ func (s *PostgresStore) PublishedArticle(ctx context.Context, categorySlug, slug
 
 func (s *PostgresStore) RelatedArticles(ctx context.Context, categoryID, excludeID uuid.UUID, limit int) ([]Summary, error) {
 	rows, err := s.q.RelatedGuideArticles(ctx, sqlc.RelatedGuideArticlesParams{
-		CategoryID: categoryID, ExcludeID: excludeID, MaxResults: int32(limit),
+		CategoryID: categoryID, ExcludeID: excludeID, MaxResults: db.Int32(limit),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("related articles: %w", err)
@@ -138,7 +138,7 @@ func (s *PostgresStore) RelatedArticles(ctx context.Context, categoryID, exclude
 }
 
 func (s *PostgresStore) Search(ctx context.Context, query string, limit int) ([]SearchHit, error) {
-	rows, err := s.q.SearchGuideArticles(ctx, sqlc.SearchGuideArticlesParams{Query: query, MaxResults: int32(limit)})
+	rows, err := s.q.SearchGuideArticles(ctx, sqlc.SearchGuideArticlesParams{Query: query, MaxResults: db.Int32(limit)})
 	if err != nil {
 		return nil, fmt.Errorf("search: %w", err)
 	}
@@ -183,7 +183,7 @@ func (s *PostgresStore) ArticleByID(ctx context.Context, id uuid.UUID) (Article,
 func (s *PostgresStore) CreateArticle(ctx context.Context, a Article) (Article, error) {
 	row, err := s.q.CreateGuideArticle(ctx, sqlc.CreateGuideArticleParams{
 		CategoryID: a.CategoryID, AuthorID: a.AuthorID, Slug: a.Slug, Title: a.Title, Excerpt: a.Excerpt,
-		Content: a.Content, CoverKey: optional(a.CoverKey), SortOrder: int32(a.SortOrder),
+		Content: a.Content, CoverKey: optional(a.CoverKey), SortOrder: db.Int32(a.SortOrder),
 		Status: sqlc.ContentStatus(a.Status), PublishedAt: a.PublishedAt,
 	})
 	if err != nil {
@@ -195,7 +195,7 @@ func (s *PostgresStore) CreateArticle(ctx context.Context, a Article) (Article, 
 func (s *PostgresStore) UpdateArticle(ctx context.Context, a Article) (Article, error) {
 	row, err := s.q.UpdateGuideArticle(ctx, sqlc.UpdateGuideArticleParams{
 		ID: a.ID, CategoryID: a.CategoryID, Slug: a.Slug, Title: a.Title, Excerpt: a.Excerpt,
-		Content: a.Content, CoverKey: optional(a.CoverKey), SortOrder: int32(a.SortOrder),
+		Content: a.Content, CoverKey: optional(a.CoverKey), SortOrder: db.Int32(a.SortOrder),
 		Status: sqlc.ContentStatus(a.Status), PublishedAt: a.PublishedAt,
 	})
 	if err != nil {

@@ -84,7 +84,7 @@ func (h *Handler) upload(ctx context.Context, in *uploadInput) (*uploadOutput, e
 	if err != nil {
 		return nil, httpapi.Error(ctx, err)
 	}
-	return &uploadOutput{Body: UploadDTO{Key: up.Key, URL: up.URL, Width: up.Width, Height: up.Height}}, nil
+	return &uploadOutput{Body: UploadDTO(up)}, nil
 }
 
 func (h *Handler) contentImage(ctx context.Context, in *contentInput) (*redirectOutput, error) {

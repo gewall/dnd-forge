@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"math"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -103,6 +104,19 @@ func InTx(ctx context.Context, pool *pgxpool.Pool, fn func(pgx.Tx) error) error 
 		return fmt.Errorf("db: commit: %w", err)
 	}
 	return nil
+}
+
+// Int32 converts n for an int4 column, saturating at the column's range.
+// Inputs are already bounded by request validation; this only guards
+// against silent wrap-around.
+func Int32(n int) int32 {
+	switch {
+	case n > math.MaxInt32:
+		return math.MaxInt32
+	case n < math.MinInt32:
+		return math.MinInt32
+	}
+	return int32(n)
 }
 
 // IsNoRows reports whether err means a query matched no row.

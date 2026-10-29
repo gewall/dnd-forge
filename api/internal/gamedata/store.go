@@ -88,7 +88,7 @@ func (s *PostgresStore) withSubraces(ctx context.Context, row sqlc.Race, err err
 func (s *PostgresStore) CreateRace(ctx context.Context, in RaceInput) (Race, error) {
 	row, err := s.q.CreateRace(ctx, sqlc.CreateRaceParams{
 		Slug: in.Slug, Name: in.Name, Description: in.Description, Traits: mustJSON(in.Traits),
-		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: int32(in.SortOrder), IsActive: in.IsActive,
+		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: db.Int32(in.SortOrder), IsActive: in.IsActive,
 	})
 	if err != nil {
 		return Race{}, mapErr(err, ErrRaceNotFound)
@@ -101,7 +101,7 @@ func (s *PostgresStore) CreateRace(ctx context.Context, in RaceInput) (Race, err
 func (s *PostgresStore) UpdateRace(ctx context.Context, id uuid.UUID, in RaceInput) (Race, error) {
 	row, err := s.q.UpdateRace(ctx, sqlc.UpdateRaceParams{
 		ID: id, Slug: in.Slug, Name: in.Name, Description: in.Description, Traits: mustJSON(in.Traits),
-		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: int32(in.SortOrder), IsActive: in.IsActive,
+		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: db.Int32(in.SortOrder), IsActive: in.IsActive,
 	})
 	if err != nil {
 		return Race{}, mapErr(err, ErrRaceNotFound)
@@ -177,9 +177,9 @@ func (s *PostgresStore) ClassByID(ctx context.Context, id uuid.UUID) (Class, err
 
 func (s *PostgresStore) CreateClass(ctx context.Context, in ClassInput) (Class, error) {
 	row, err := s.q.CreateClass(ctx, sqlc.CreateClassParams{
-		Slug: in.Slug, Name: in.Name, HitDie: int32(in.HitDie), PrimaryAbility: in.PrimaryAbility,
+		Slug: in.Slug, Name: in.Name, HitDie: db.Int32(in.HitDie), PrimaryAbility: in.PrimaryAbility,
 		Description: in.Description, Features: mustJSON(in.Features), VisualPrompt: in.VisualPrompt,
-		ImageKey: optional(in.ImageKey), SortOrder: int32(in.SortOrder), IsActive: in.IsActive,
+		ImageKey: optional(in.ImageKey), SortOrder: db.Int32(in.SortOrder), IsActive: in.IsActive,
 	})
 	if err != nil {
 		return Class{}, mapErr(err, ErrClassNotFound)
@@ -189,9 +189,9 @@ func (s *PostgresStore) CreateClass(ctx context.Context, in ClassInput) (Class, 
 
 func (s *PostgresStore) UpdateClass(ctx context.Context, id uuid.UUID, in ClassInput) (Class, error) {
 	row, err := s.q.UpdateClass(ctx, sqlc.UpdateClassParams{
-		ID: id, Slug: in.Slug, Name: in.Name, HitDie: int32(in.HitDie), PrimaryAbility: in.PrimaryAbility,
+		ID: id, Slug: in.Slug, Name: in.Name, HitDie: db.Int32(in.HitDie), PrimaryAbility: in.PrimaryAbility,
 		Description: in.Description, Features: mustJSON(in.Features), VisualPrompt: in.VisualPrompt,
-		ImageKey: optional(in.ImageKey), SortOrder: int32(in.SortOrder), IsActive: in.IsActive,
+		ImageKey: optional(in.ImageKey), SortOrder: db.Int32(in.SortOrder), IsActive: in.IsActive,
 	})
 	if err != nil {
 		return Class{}, mapErr(err, ErrClassNotFound)
@@ -237,7 +237,7 @@ func (s *PostgresStore) BackgroundByID(ctx context.Context, id uuid.UUID) (Backg
 func (s *PostgresStore) CreateBackground(ctx context.Context, in BackgroundInput) (Background, error) {
 	row, err := s.q.CreateBackground(ctx, sqlc.CreateBackgroundParams{
 		Slug: in.Slug, Name: in.Name, Description: in.Description, SkillProficiencies: mustJSON(in.SkillProficiencies),
-		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: int32(in.SortOrder), IsActive: in.IsActive,
+		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: db.Int32(in.SortOrder), IsActive: in.IsActive,
 	})
 	if err != nil {
 		return Background{}, mapErr(err, ErrBackgroundNotFound)
@@ -248,7 +248,7 @@ func (s *PostgresStore) CreateBackground(ctx context.Context, in BackgroundInput
 func (s *PostgresStore) UpdateBackground(ctx context.Context, id uuid.UUID, in BackgroundInput) (Background, error) {
 	row, err := s.q.UpdateBackground(ctx, sqlc.UpdateBackgroundParams{
 		ID: id, Slug: in.Slug, Name: in.Name, Description: in.Description, SkillProficiencies: mustJSON(in.SkillProficiencies),
-		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: int32(in.SortOrder), IsActive: in.IsActive,
+		VisualPrompt: in.VisualPrompt, ImageKey: optional(in.ImageKey), SortOrder: db.Int32(in.SortOrder), IsActive: in.IsActive,
 	})
 	if err != nil {
 		return Background{}, mapErr(err, ErrBackgroundNotFound)
