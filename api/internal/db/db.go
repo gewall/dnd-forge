@@ -126,8 +126,9 @@ func IsNoRows(err error) bool { return errors.Is(err, pgx.ErrNoRows) }
 func IsUniqueViolation(err error) bool { return hasCode(err, "23505") }
 
 // IsForeignKeyViolation reports whether err is a foreign key violation,
-// e.g. deleting a row other rows still reference.
-func IsForeignKeyViolation(err error) bool { return hasCode(err, "23503") }
+// e.g. deleting a row other rows still reference. ON DELETE RESTRICT
+// reports restrict_violation (23001) instead of 23503.
+func IsForeignKeyViolation(err error) bool { return hasCode(err, "23503") || hasCode(err, "23001") }
 
 // ViolatedConstraint returns the name of the constraint err violated, or "".
 func ViolatedConstraint(err error) string {
