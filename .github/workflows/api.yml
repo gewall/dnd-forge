@@ -56,7 +56,8 @@ jobs:
           git diff --exit-code -- openapi.json
 
       - run: go test -race ./...
-      - run: go test -race -tags integration ./...
+      # Integration tests share one database, so packages run one at a time.
+      - run: go test -race -p 1 -tags integration ./...
 
   image:
     needs: test

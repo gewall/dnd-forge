@@ -1,0 +1,266 @@
+{
+  "attribution": "This work includes material from the System Reference Document 5.2 (\"SRD 5.2\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+  "races": [
+    {
+      "slug": "dragonborn",
+      "name": "Dragonborn",
+      "description": "Keturunan naga yang berdiri tegak, bersisik, dan membawa napas elemen leluhurnya. Dragonborn dikenal bangga, setia pada klan, dan berani menghadapi bahaya.",
+      "visualPrompt": "draconic humanoid with scaled skin, reptilian snout, no tail, proud and powerful build",
+      "sortOrder": 10,
+      "traits": [
+        {"name": "Draconic Ancestry", "description": "Pilih satu jenis naga leluhur. Pilihan ini menentukan jenis kerusakan napas dan ketahananmu."},
+        {"name": "Breath Weapon", "description": "Ganti satu serangan dengan semburan napas berbentuk kerucut 15 kaki atau garis 30 kaki. Target melakukan saving throw Dexterity; kerusakan 1d10 dan naik di level 5, 11, dan 17. Jumlah pemakaian sama dengan Proficiency Bonus, pulih setelah Long Rest."},
+        {"name": "Damage Resistance", "description": "Tahan terhadap jenis kerusakan sesuai leluhur nagamu."},
+        {"name": "Darkvision", "description": "Melihat dalam gelap hingga 60 kaki."},
+        {"name": "Draconic Flight", "description": "Mulai level 5, sebagai Bonus Action kamu menumbuhkan sayap spektral dan bisa terbang selama 10 menit. Sekali per Long Rest."}
+      ],
+      "subraces": [
+        {"slug": "black", "name": "Black Dragon Ancestry", "description": "Leluhur naga hitam; napas dan ketahanan Acid.", "visualPrompt": "glossy black scales, acid-green eyes"},
+        {"slug": "blue", "name": "Blue Dragon Ancestry", "description": "Leluhur naga biru; napas dan ketahanan Lightning.", "visualPrompt": "deep blue scales with crackling static, single horn crest"},
+        {"slug": "brass", "name": "Brass Dragon Ancestry", "description": "Leluhur naga kuningan; napas dan ketahanan Fire.", "visualPrompt": "warm brass-colored metallic scales, broad frilled head"},
+        {"slug": "bronze", "name": "Bronze Dragon Ancestry", "description": "Leluhur naga perunggu; napas dan ketahanan Lightning.", "visualPrompt": "bronze metallic scales with sea-green sheen"},
+        {"slug": "copper", "name": "Copper Dragon Ancestry", "description": "Leluhur naga tembaga; napas dan ketahanan Acid.", "visualPrompt": "copper metallic scales with turquoise patina accents"},
+        {"slug": "gold", "name": "Gold Dragon Ancestry", "description": "Leluhur naga emas; napas dan ketahanan Fire.", "visualPrompt": "shining gold metallic scales, regal whisker-like tendrils"},
+        {"slug": "green", "name": "Green Dragon Ancestry", "description": "Leluhur naga hijau; napas dan ketahanan Poison.", "visualPrompt": "emerald green scales, spiked crest along the head"},
+        {"slug": "red", "name": "Red Dragon Ancestry", "description": "Leluhur naga merah; napas dan ketahanan Fire.", "visualPrompt": "crimson red scales, swept-back horns, ember glow in the eyes"},
+        {"slug": "silver", "name": "Silver Dragon Ancestry", "description": "Leluhur naga perak; napas dan ketahanan Cold.", "visualPrompt": "gleaming silver metallic scales, frost-blue eyes"},
+        {"slug": "white", "name": "White Dragon Ancestry", "description": "Leluhur naga putih; napas dan ketahanan Cold.", "visualPrompt": "pale white scales rimmed with frost"}
+      ]
+    },
+    {
+      "slug": "dwarf",
+      "name": "Dwarf",
+      "description": "Bangsa tangguh dari dalam pegunungan, ahli batu dan logam. Dwarf terkenal tabah, keras kepala, dan menjunjung tinggi tradisi serta kehormatan keluarga.",
+      "visualPrompt": "stout broad-shouldered dwarf, braided beard, sturdy weathered features",
+      "sortOrder": 20,
+      "traits": [
+        {"name": "Darkvision", "description": "Melihat dalam gelap hingga 120 kaki."},
+        {"name": "Dwarven Resilience", "description": "Tahan terhadap kerusakan Poison dan mendapat advantage pada saving throw agar tidak terkena kondisi Poisoned."},
+        {"name": "Dwarven Toughness", "description": "Hit Point maksimum bertambah 1, dan bertambah 1 lagi setiap naik level."},
+        {"name": "Stonecunning", "description": "Sebagai Bonus Action, dapatkan Tremorsense 60 kaki selama 10 menit saat berada di atau menyentuh permukaan batu. Jumlah pemakaian sama dengan Proficiency Bonus, pulih setelah Long Rest."}
+      ],
+      "subraces": []
+    },
+    {
+      "slug": "elf",
+      "name": "Elf",
+      "description": "Bangsa berumur panjang yang memiliki ikatan dengan Feywild. Elf anggun, peka terhadap sekitar, dan tidak tidur seperti makhluk lain melainkan bermeditasi.",
+      "visualPrompt": "graceful elf with pointed ears, slender build, ageless fine features",
+      "sortOrder": 30,
+      "traits": [
+        {"name": "Darkvision", "description": "Melihat dalam gelap hingga 60 kaki."},
+        {"name": "Elven Lineage", "description": "Pilih satu lineage (Drow, High Elf, atau Wood Elf) yang memberi kemampuan dan mantra tambahan seiring naik level."},
+        {"name": "Fey Ancestry", "description": "Advantage pada saving throw agar tidak terkena kondisi Charmed."},
+        {"name": "Keen Senses", "description": "Proficiency pada salah satu skill: Insight, Perception, atau Survival."},
+        {"name": "Trance", "description": "Long Rest cukup 4 jam meditasi, dan kamu tidak bisa ditidurkan oleh sihir."}
+      ],
+      "subraces": [
+        {"slug": "drow", "name": "Drow", "description": "Elf dari Underdark. Darkvision menjadi 120 kaki dan mengenal cantrip Dancing Lights, lalu mantra lain di level 3 dan 5.", "visualPrompt": "dark-skinned drow elf with white hair, faint violet glow in the eyes"},
+        {"slug": "high-elf", "name": "High Elf", "description": "Elf yang dekat dengan sihir arcane. Mengenal cantrip Prestidigitation yang bisa ditukar setelah Long Rest, lalu mantra lain di level 3 dan 5.", "visualPrompt": "high elf with refined elegant features, flowing hair, arcane jewelry"},
+        {"slug": "wood-elf", "name": "Wood Elf", "description": "Elf penjaga hutan. Kecepatan bergerak menjadi 35 kaki dan mengenal cantrip Druidcraft, lalu mantra lain di level 3 dan 5.", "visualPrompt": "wood elf with sun-tanned skin, leaves woven in the hair, earthy clothing"}
+      ]
+    },
+    {
+      "slug": "gnome",
+      "name": "Gnome",
+      "description": "Makhluk kecil yang cerdas, penuh rasa ingin tahu, dan gemar menciptakan atau menyelidiki hal baru.",
+      "visualPrompt": "small gnome with large curious eyes, button nose, wild hair, lively expression",
+      "sortOrder": 40,
+      "traits": [
+        {"name": "Darkvision", "description": "Melihat dalam gelap hingga 60 kaki."},
+        {"name": "Gnomish Cunning", "description": "Advantage pada saving throw Intelligence, Wisdom, dan Charisma."},
+        {"name": "Gnomish Lineage", "description": "Pilih lineage Forest Gnome atau Rock Gnome."}
+      ],
+      "subraces": [
+        {"slug": "forest-gnome", "name": "Forest Gnome", "description": "Mengenal cantrip Minor Illusion dan selalu menyiapkan mantra Speak with Animals.", "visualPrompt": "forest gnome in moss-green clothes, twigs and feathers in the hair"},
+        {"slug": "rock-gnome", "name": "Rock Gnome", "description": "Mengenal cantrip Mending dan Prestidigitation, serta bisa merakit alat mekanis kecil.", "visualPrompt": "rock gnome tinkerer with brass goggles and tool belt"}
+      ]
+    },
+    {
+      "slug": "goliath",
+      "name": "Goliath",
+      "description": "Keturunan jauh para raksasa yang tinggi dan kuat. Goliath menyukai tantangan fisik dan membawa sedikit kekuatan leluhur raksasa mereka.",
+      "visualPrompt": "towering muscular goliath with grey stone-like skin marked by dark patterns",
+      "sortOrder": 50,
+      "traits": [
+        {"name": "Giant Ancestry", "description": "Pilih satu warisan raksasa yang memberi kemampuan khusus. Jumlah pemakaian sama dengan Proficiency Bonus, pulih setelah Long Rest."},
+        {"name": "Large Form", "description": "Mulai level 5, sebagai Bonus Action kamu menjadi berukuran Large selama 10 menit: advantage pada uji Strength dan kecepatan bertambah 10 kaki. Sekali per Long Rest."},
+        {"name": "Powerful Build", "description": "Advantage untuk lepas dari kondisi Grappled, dan dihitung satu ukuran lebih besar untuk kapasitas angkut."},
+        {"name": "Speed", "description": "Kecepatan bergerak 35 kaki."}
+      ],
+      "subraces": [
+        {"slug": "cloud", "name": "Cloud's Jaunt", "description": "Sebagai Bonus Action, teleportasi hingga 30 kaki ke tempat yang terlihat.", "visualPrompt": "misty pale-blue skin markings, wisps of cloud around the shoulders"},
+        {"slug": "fire", "name": "Fire's Burn", "description": "Saat serangan mengenai target, tambahkan 1d10 kerusakan Fire.", "visualPrompt": "ember-red skin markings, faint smoke rising from the body"},
+        {"slug": "frost", "name": "Frost's Chill", "description": "Saat serangan mengenai target, tambahkan 1d6 kerusakan Cold dan kurangi kecepatannya 10 kaki.", "visualPrompt": "ice-blue skin markings, frost on the hair and brows"},
+        {"slug": "hill", "name": "Hill's Tumble", "description": "Saat serangan mengenai makhluk Large atau lebih kecil, kamu bisa membuatnya Prone.", "visualPrompt": "earthy brown skin markings, rugged hill-country furs"},
+        {"slug": "stone", "name": "Stone's Endurance", "description": "Sebagai Reaction saat terkena kerusakan, kurangi kerusakan itu sebesar 1d12 + modifier Constitution.", "visualPrompt": "granite-grey skin with crystal veins"},
+        {"slug": "storm", "name": "Storm's Thunder", "description": "Sebagai Reaction saat terkena kerusakan dari makhluk dalam 60 kaki, berikan 1d8 kerusakan Thunder kepadanya.", "visualPrompt": "storm-grey skin markings with faint lightning crackles"}
+      ]
+    },
+    {
+      "slug": "halfling",
+      "name": "Halfling",
+      "description": "Bangsa mungil yang ramah, pemberani, dan sering kali beruntung. Halfling menyukai kenyamanan rumah, tetapi tak gentar saat petualangan datang.",
+      "visualPrompt": "small cheerful halfling with curly hair, rosy cheeks, bare feet",
+      "sortOrder": 60,
+      "traits": [
+        {"name": "Brave", "description": "Advantage pada saving throw agar tidak terkena kondisi Frightened."},
+        {"name": "Halfling Nimbleness", "description": "Bisa bergerak melewati ruang makhluk yang lebih besar darimu."},
+        {"name": "Luck", "description": "Saat mendapat angka 1 pada d20 Test, kamu boleh melempar ulang dan wajib memakai hasil baru."},
+        {"name": "Naturally Stealthy", "description": "Bisa mencoba bersembunyi walau hanya terhalang makhluk yang setidaknya satu ukuran lebih besar."}
+      ],
+      "subraces": []
+    },
+    {
+      "slug": "human",
+      "name": "Human",
+      "description": "Bangsa paling beragam dan mudah beradaptasi. Umur manusia pendek, tetapi ambisi dan kecerdikan mereka membuat mereka ada di mana-mana.",
+      "visualPrompt": "human adventurer with expressive determined face",
+      "sortOrder": 70,
+      "traits": [
+        {"name": "Resourceful", "description": "Mendapat Heroic Inspiration setiap selesai Long Rest."},
+        {"name": "Skillful", "description": "Proficiency pada satu skill pilihan."},
+        {"name": "Versatile", "description": "Mendapat satu Origin feat pilihan."}
+      ],
+      "subraces": []
+    },
+    {
+      "slug": "orc",
+      "name": "Orc",
+      "description": "Bangsa kuat yang konon diberkahi dewa pencipta mereka dengan daya tahan luar biasa. Orc pantang menyerah dan cepat bertindak.",
+      "visualPrompt": "muscular orc with grey-green skin, prominent lower tusks, strong jaw",
+      "sortOrder": 80,
+      "traits": [
+        {"name": "Adrenaline Rush", "description": "Lakukan Dash sebagai Bonus Action dan dapatkan Temporary Hit Points sebesar Proficiency Bonus. Jumlah pemakaian sama dengan Proficiency Bonus, pulih setelah Short atau Long Rest."},
+        {"name": "Darkvision", "description": "Melihat dalam gelap hingga 120 kaki."},
+        {"name": "Relentless Endurance", "description": "Saat Hit Point turun ke 0 tetapi tidak langsung mati, kamu tetap bertahan dengan 1 Hit Point. Sekali per Long Rest."}
+      ],
+      "subraces": []
+    },
+    {
+      "slug": "tiefling",
+      "name": "Tiefling",
+      "description": "Manusia yang membawa jejak alam bawah dalam darahnya. Tiefling sering dicurigai, tetapi banyak yang membuktikan diri lewat tindakan.",
+      "visualPrompt": "tiefling with curved horns, solid-colored eyes, long tail",
+      "sortOrder": 90,
+      "traits": [
+        {"name": "Darkvision", "description": "Melihat dalam gelap hingga 60 kaki."},
+        {"name": "Fiendish Legacy", "description": "Pilih warisan Abyssal, Chthonic, atau Infernal yang memberi ketahanan, satu cantrip, lalu mantra lain di level 3 dan 5."},
+        {"name": "Otherworldly Presence", "description": "Mengenal cantrip Thaumaturgy."}
+      ],
+      "subraces": [
+        {"slug": "abyssal", "name": "Abyssal Legacy", "description": "Tahan terhadap kerusakan Poison dan mengenal cantrip Poison Spray.", "visualPrompt": "jagged dark horns, mottled purple-grey skin"},
+        {"slug": "chthonic", "name": "Chthonic Legacy", "description": "Tahan terhadap kerusakan Necrotic dan mengenal cantrip Chill Touch.", "visualPrompt": "ashen pale skin, smoky black horns, ghostly aura"},
+        {"slug": "infernal", "name": "Infernal Legacy", "description": "Tahan terhadap kerusakan Fire dan mengenal cantrip Fire Bolt.", "visualPrompt": "crimson skin, ram-like horns, glowing ember eyes"}
+      ]
+    }
+  ],
+  "classes": [
+    {"slug": "barbarian", "name": "Barbarian", "hitDie": 12, "primaryAbility": "Strength", "sortOrder": 10,
+     "description": "Pejuang ganas yang mengandalkan amarah primal untuk menghantam musuh dan menahan luka.",
+     "visualPrompt": "fierce barbarian warrior with greataxe, fur and leather armor, battle scars",
+     "features": [
+       {"name": "Rage", "description": "Masuki amarah untuk menambah kerusakan serangan Strength dan menahan kerusakan fisik."},
+       {"name": "Unarmored Defense", "description": "Tanpa armor, Armor Class = 10 + modifier Dexterity + modifier Constitution."},
+       {"name": "Weapon Mastery", "description": "Kuasai sifat khusus beberapa senjata pilihan."}
+     ]},
+    {"slug": "bard", "name": "Bard", "hitDie": 8, "primaryAbility": "Charisma", "sortOrder": 20,
+     "description": "Seniman yang menenun sihir lewat musik dan kata-kata untuk menginspirasi kawan.",
+     "visualPrompt": "charismatic bard holding a lute, colorful flamboyant clothing",
+     "features": [
+       {"name": "Bardic Inspiration", "description": "Berikan dadu inspirasi yang bisa ditambahkan sekutu ke d20 Test mereka."},
+       {"name": "Spellcasting", "description": "Merapal mantra bard dengan Charisma."}
+     ]},
+    {"slug": "cleric", "name": "Cleric", "hitDie": 8, "primaryAbility": "Wisdom", "sortOrder": 30,
+     "description": "Utusan dewa yang menyalurkan kuasa ilahi untuk menyembuhkan dan melindungi.",
+     "visualPrompt": "devout cleric with holy symbol and mace, chainmail with sacred tabard",
+     "features": [
+       {"name": "Spellcasting", "description": "Merapal mantra cleric dengan Wisdom."},
+       {"name": "Divine Order", "description": "Pilih peran Protector (pelindung bersenjata berat) atau Thaumaturge (penyihir ilahi)."}
+     ]},
+    {"slug": "druid", "name": "Druid", "hitDie": 8, "primaryAbility": "Wisdom", "sortOrder": 40,
+     "description": "Penjaga alam yang memanggil kekuatan primal dan bisa berubah wujud menjadi hewan.",
+     "visualPrompt": "druid with wooden staff, robes of leaves and bark, small animal companion",
+     "features": [
+       {"name": "Spellcasting", "description": "Merapal mantra druid dengan Wisdom."},
+       {"name": "Druidic", "description": "Menguasai bahasa rahasia para druid."},
+       {"name": "Primal Order", "description": "Pilih peran Magician (sihir tambahan) atau Warden (pejuang berarmor)."}
+     ]},
+    {"slug": "fighter", "name": "Fighter", "hitDie": 10, "primaryAbility": "Strength atau Dexterity", "sortOrder": 50,
+     "description": "Ahli senjata dan taktik yang serba bisa di garis depan pertempuran.",
+     "visualPrompt": "disciplined fighter in plate armor with longsword and shield",
+     "features": [
+       {"name": "Fighting Style", "description": "Pilih gaya bertarung yang memberi keunggulan khusus."},
+       {"name": "Second Wind", "description": "Sebagai Bonus Action, pulihkan Hit Point sendiri."},
+       {"name": "Weapon Mastery", "description": "Kuasai sifat khusus beberapa senjata pilihan."}
+     ]},
+    {"slug": "monk", "name": "Monk", "hitDie": 8, "primaryAbility": "Dexterity dan Wisdom", "sortOrder": 60,
+     "description": "Petarung tangan kosong yang mengolah energi batin menjadi gerakan cepat dan pukulan beruntun.",
+     "visualPrompt": "agile monk in simple martial arts robes, hand wraps, focused stance",
+     "features": [
+       {"name": "Martial Arts", "description": "Serangan tangan kosong dan senjata monk memakai dadu Martial Arts dan Dexterity."},
+       {"name": "Unarmored Defense", "description": "Tanpa armor dan perisai, Armor Class = 10 + modifier Dexterity + modifier Wisdom."}
+     ]},
+    {"slug": "paladin", "name": "Paladin", "hitDie": 10, "primaryAbility": "Strength dan Charisma", "sortOrder": 70,
+     "description": "Ksatria suci yang terikat sumpah, memadukan kekuatan senjata dengan kuasa ilahi.",
+     "visualPrompt": "noble paladin in shining plate armor, glowing holy sword",
+     "features": [
+       {"name": "Lay On Hands", "description": "Sembuhkan luka dengan sentuhan dari cadangan kekuatan penyembuh."},
+       {"name": "Spellcasting", "description": "Merapal mantra paladin dengan Charisma."},
+       {"name": "Weapon Mastery", "description": "Kuasai sifat khusus beberapa senjata pilihan."}
+     ]},
+    {"slug": "ranger", "name": "Ranger", "hitDie": 10, "primaryAbility": "Dexterity dan Wisdom", "sortOrder": 80,
+     "description": "Pemburu dan penjelajah alam liar yang memadukan keahlian senjata dengan sihir alam.",
+     "visualPrompt": "ranger with longbow and hooded green cloak, quiver of arrows",
+     "features": [
+       {"name": "Spellcasting", "description": "Merapal mantra ranger dengan Wisdom."},
+       {"name": "Favored Enemy", "description": "Selalu menyiapkan Hunter's Mark dan bisa merapalnya beberapa kali tanpa slot mantra."},
+       {"name": "Weapon Mastery", "description": "Kuasai sifat khusus beberapa senjata pilihan."}
+     ]},
+    {"slug": "rogue", "name": "Rogue", "hitDie": 8, "primaryAbility": "Dexterity", "sortOrder": 90,
+     "description": "Ahli siasat, sembunyi, dan serangan mematikan pada titik lemah musuh.",
+     "visualPrompt": "stealthy rogue with twin daggers, dark leather armor and hood",
+     "features": [
+       {"name": "Expertise", "description": "Gandakan Proficiency Bonus pada dua skill pilihan."},
+       {"name": "Sneak Attack", "description": "Tambahkan kerusakan ekstra sekali per giliran saat menyerang dengan keunggulan."},
+       {"name": "Thieves' Cant", "description": "Menguasai bahasa rahasia para pencuri."},
+       {"name": "Weapon Mastery", "description": "Kuasai sifat khusus beberapa senjata pilihan."}
+     ]},
+    {"slug": "sorcerer", "name": "Sorcerer", "hitDie": 6, "primaryAbility": "Charisma", "sortOrder": 100,
+     "description": "Perapal yang sihirnya lahir dari dalam diri, warisan darah atau peristiwa luar biasa.",
+     "visualPrompt": "sorcerer with raw magic swirling around the hands, glowing eyes",
+     "features": [
+       {"name": "Spellcasting", "description": "Merapal mantra sorcerer dengan Charisma."},
+       {"name": "Innate Sorcery", "description": "Sebagai Bonus Action, lepaskan sihir bawaan untuk memperkuat mantra sementara."}
+     ]},
+    {"slug": "warlock", "name": "Warlock", "hitDie": 8, "primaryAbility": "Charisma", "sortOrder": 110,
+     "description": "Pencari pengetahuan terlarang yang mendapat sihir lewat perjanjian dengan entitas kuat.",
+     "visualPrompt": "warlock in dark ornate robes, eldritch purple energy, mysterious patron sigil",
+     "features": [
+       {"name": "Eldritch Invocations", "description": "Pilih kemampuan gaib yang memperkuat dirimu."},
+       {"name": "Pact Magic", "description": "Merapal mantra warlock dengan Charisma; slot mantra pulih setelah Short Rest."}
+     ]},
+    {"slug": "wizard", "name": "Wizard", "hitDie": 6, "primaryAbility": "Intelligence", "sortOrder": 120,
+     "description": "Cendekiawan sihir yang mempelajari mantra dari buku dan menguasai sihir lewat studi.",
+     "visualPrompt": "scholarly wizard with spellbook and staff, flowing robes, arcane runes",
+     "features": [
+       {"name": "Spellcasting", "description": "Merapal mantra wizard dengan Intelligence dari spellbook."},
+       {"name": "Ritual Adept", "description": "Merapal mantra ritual dari spellbook tanpa harus menyiapkannya."},
+       {"name": "Arcane Recovery", "description": "Pulihkan sebagian slot mantra setelah Short Rest."}
+     ]}
+  ],
+  "backgrounds": [
+    {"slug": "acolyte", "name": "Acolyte", "sortOrder": 10, "skillProficiencies": ["Insight", "Religion"],
+     "description": "Kamu tumbuh dan melayani di sebuah kuil, mempelajari ritual dan ajaran agama.",
+     "visualPrompt": "temple acolyte robes, prayer beads, candlelit shrine"},
+    {"slug": "criminal", "name": "Criminal", "sortOrder": 20, "skillProficiencies": ["Sleight of Hand", "Stealth"],
+     "description": "Kamu bertahan hidup di sisi gelap kota, terbiasa dengan pencurian dan jaringan bawah tanah.",
+     "visualPrompt": "street criminal look, dark hooded cloak, lockpicks"},
+    {"slug": "sage", "name": "Sage", "sortOrder": 30, "skillProficiencies": ["Arcana", "History"],
+     "description": "Bertahun-tahun kamu habiskan di perpustakaan dan akademi untuk mengejar pengetahuan.",
+     "visualPrompt": "scholar attire, ink-stained fingers, stack of old tomes"},
+    {"slug": "soldier", "name": "Soldier", "sortOrder": 40, "skillProficiencies": ["Athletics", "Intimidation"],
+     "description": "Kamu dilatih dan pernah bertugas dalam pasukan, terbiasa dengan disiplin dan pertempuran.",
+     "visualPrompt": "veteran soldier insignia, battle-worn uniform, military bearing"}
+  ]
+}

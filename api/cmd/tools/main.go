@@ -1,6 +1,7 @@
 // Command tools holds one-off maintenance commands.
 //
 //	tools migrate                                  apply database migrations
+//	tools seed                                     insert SRD 5.2 game data and guide categories
 //	tools seed-admin -email a@b.c [-password ...]  create or promote an admin
 //	tools openapi [-o openapi.json]                write the OpenAPI document
 //	tools gen-keys                                 print fresh secrets for .env
@@ -28,6 +29,7 @@ const usage = `usage: tools <command> [flags]
 
 commands:
   migrate      apply database migrations (goose + River)
+  seed         insert missing SRD 5.2 game data and guide categories
   seed-admin   create or promote an admin account
   openapi      write the OpenAPI 3.1 document
   gen-keys     print JWT_PRIVATE_KEY, ENCRYPTION_KEY and INTERNAL_API_KEY`
@@ -45,6 +47,8 @@ func main() {
 	switch cmd {
 	case "migrate":
 		err = migrate(ctx)
+	case "seed":
+		err = seed(ctx)
 	case "seed-admin":
 		err = seedAdmin(ctx, args)
 	case "openapi":
@@ -72,6 +76,31 @@ func migrate(ctx context.Context) error {
 	}
 	defer pool.Close()
 	return db.Migrate(ctx, pool, slog.Default())
+}
+
+func seed(ctx context.Context) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	a, err := app.New(ctx, cfg, slog.Default())
+	if err != nil {
+		return err
+	}
+	defer a.Close()
+
+	rep, err := a.GameData.Seed(ctx)
+	if err != nil {
+		return err
+	}
+	cats, err := a.Guide.SeedCategories(ctx)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("created: %d races, %d subraces, %d classes, %d backgrounds, %d guide categories\n",
+		rep.Races, rep.Subraces, rep.Classes, rep.Backgrounds, cats)
+	fmt.Printf("attribution (show it on the site): %s\n", rep.Attribution)
+	return nil
 }
 
 func seedAdmin(ctx context.Context, args []string) error {

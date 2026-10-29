@@ -22,11 +22,11 @@ type Handler struct {
 // NewHandler returns a Handler that reports unhealthy when db fails a ping.
 func NewHandler(db Pinger) *Handler { return &Handler{db: db} }
 
-type Status struct {
+type HealthStatus struct {
 	Status string `json:"status" example:"ok"`
 }
 
-type output struct{ Body Status }
+type output struct{ Body HealthStatus }
 
 // Register adds the health operation to api.
 func (h *Handler) Register(api huma.API) {
@@ -46,5 +46,5 @@ func (h *Handler) check(ctx context.Context, _ *struct{}) (*output, error) {
 	if err := h.db.Ping(ctx); err != nil {
 		return nil, huma.Error503ServiceUnavailable("database tidak tersedia")
 	}
-	return &output{Body: Status{Status: "ok"}}, nil
+	return &output{Body: HealthStatus{Status: "ok"}}, nil
 }

@@ -1,6 +1,8 @@
 package httpapi
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -113,6 +115,16 @@ func (s *Server) authenticate(ctx huma.Context, next func(huma.Context)) {
 		return
 	}
 	next(huma.WithContext(ctx, identity.WithPrincipal(ctx.Context(), p)))
+}
+
+// Principal returns the caller of an Authenticated or AdminOnly operation.
+// The error only occurs when an operation forgot to declare its access.
+func Principal(ctx context.Context) (identity.Principal, error) {
+	p, ok := identity.FromContext(ctx)
+	if !ok {
+		return identity.Principal{}, errors.New("httpapi: no principal; operation is missing Authenticated/AdminOnly")
+	}
+	return p, nil
 }
 
 func bearerToken(header string) (string, bool) {

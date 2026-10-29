@@ -1,0 +1,7 @@
+[
+  {"slug": "dasar-aturan", "title": "Dasar Aturan", "description": "Dadu, ability score, uji kemampuan, dan cara permainan berjalan.", "sortOrder": 10},
+  {"slug": "membuat-karakter", "title": "Membuat Karakter", "description": "Langkah memilih ras, kelas, latar belakang, dan detail karakter.", "sortOrder": 20},
+  {"slug": "combat", "title": "Combat", "description": "Inisiatif, aksi, serangan, kerusakan, dan kondisi dalam pertempuran.", "sortOrder": 30},
+  {"slug": "sihir", "title": "Sihir", "description": "Cara kerja mantra, slot mantra, dan komponen.", "sortOrder": 40},
+  {"slug": "petualangan", "title": "Petualangan", "description": "Eksplorasi, istirahat, perjalanan, dan interaksi sosial.", "sortOrder": 50}
+]

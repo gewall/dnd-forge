@@ -109,7 +109,13 @@ func InTx(ctx context.Context, pool *pgxpool.Pool, fn func(pgx.Tx) error) error 
 func IsNoRows(err error) bool { return errors.Is(err, pgx.ErrNoRows) }
 
 // IsUniqueViolation reports whether err is a unique constraint violation.
-func IsUniqueViolation(err error) bool {
+func IsUniqueViolation(err error) bool { return hasCode(err, "23505") }
+
+// IsForeignKeyViolation reports whether err is a foreign key violation,
+// e.g. deleting a row other rows still reference.
+func IsForeignKeyViolation(err error) bool { return hasCode(err, "23503") }
+
+func hasCode(err error, code string) bool {
 	pgErr, ok := errors.AsType[*pgconn.PgError](err)
-	return ok && pgErr.Code == "23505"
+	return ok && pgErr.Code == code
 }

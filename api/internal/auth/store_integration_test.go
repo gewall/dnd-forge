@@ -5,36 +5,16 @@ package auth
 import (
 	"context"
 	"errors"
-	"io"
-	"log/slog"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/gewall/dnd-forge/api/internal/db"
+	"github.com/gewall/dnd-forge/api/internal/db/dbtest"
 	"github.com/gewall/dnd-forge/api/internal/identity"
 )
 
-// Run with: TEST_DATABASE_URL=postgres://... go test -tags integration ./...
 func newIntegrationStore(t *testing.T) *PostgresStore {
 	t.Helper()
-	url := os.Getenv("TEST_DATABASE_URL")
-	if url == "" {
-		t.Skip("TEST_DATABASE_URL not set")
-	}
-	ctx := context.Background()
-	pool, err := db.Open(ctx, url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
-	if err := db.Migrate(ctx, pool, slog.New(slog.NewTextHandler(io.Discard, nil))); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := pool.Exec(ctx, "TRUNCATE users CASCADE"); err != nil {
-		t.Fatal(err)
-	}
-	return NewPostgresStore(pool)
+	return NewPostgresStore(dbtest.Pool(t, "users"))
 }
 
 func TestPostgresStoreUsers(t *testing.T) {

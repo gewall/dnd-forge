@@ -42,6 +42,16 @@ type Config struct {
 	GoogleClientID     string `env:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET"`
 	GoogleRedirectURL  string `env:"GOOGLE_REDIRECT_URL"` // callback di Next.js, sama persis dengan yang terdaftar di Google
+
+	// Object storage (Garage). S3Endpoint is used for uploads; presigned
+	// download URLs are signed for S3PublicEndpoint.
+	S3Endpoint        string        `env:"S3_ENDPOINT,required,notEmpty"`
+	S3PublicEndpoint  string        `env:"S3_PUBLIC_ENDPOINT,required,notEmpty"`
+	S3Region          string        `env:"S3_REGION" envDefault:"garage"`
+	S3Bucket          string        `env:"S3_BUCKET,required,notEmpty"`
+	S3AccessKeyID     string        `env:"S3_ACCESS_KEY_ID,required,notEmpty"`
+	S3SecretAccessKey string        `env:"S3_SECRET_ACCESS_KEY,required,notEmpty"`
+	PresignTTL        time.Duration `env:"PRESIGN_TTL" envDefault:"6h"`
 }
 
 // Load reads and validates the configuration from the environment.

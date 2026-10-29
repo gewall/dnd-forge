@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -194,9 +193,9 @@ func (h *Handler) publicKey(ctx context.Context, _ *struct{}) (*publicKeyOutput,
 }
 
 func (h *Handler) me(ctx context.Context, _ *struct{}) (*userOutput, error) {
-	p, ok := identity.FromContext(ctx)
-	if !ok {
-		return nil, httpapi.Error(ctx, errors.New("auth: principal missing on authenticated route"))
+	p, err := httpapi.Principal(ctx)
+	if err != nil {
+		return nil, httpapi.Error(ctx, err)
 	}
 	u, err := h.svc.User(ctx, p.UserID)
 	if err != nil {

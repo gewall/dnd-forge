@@ -14,13 +14,20 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/auth"
 	"github.com/gewall/dnd-forge/api/internal/config"
 	"github.com/gewall/dnd-forge/api/internal/db"
+	"github.com/gewall/dnd-forge/api/internal/gamedata"
+	"github.com/gewall/dnd-forge/api/internal/guide"
 	"github.com/gewall/dnd-forge/api/internal/health"
 	"github.com/gewall/dnd-forge/api/internal/httpapi"
+	"github.com/gewall/dnd-forge/api/internal/imaging"
+	"github.com/gewall/dnd-forge/api/internal/media"
+	"github.com/gewall/dnd-forge/api/internal/storage"
 )
 
 const (
 	Title   = "DnD Forge API"
-	Version = "0.1.0"
+	Version = "0.2.0"
+
+	webpQuality = 82
 )
 
 // Registrar is implemented by every feature handler.
@@ -30,15 +37,34 @@ type Registrar interface {
 
 // App holds the long-lived dependencies of a running API.
 type App struct {
-	Config config.Config
-	Pool   *pgxpool.Pool
-	Auth   *auth.Service
-	Server *httpapi.Server
+	Config   config.Config
+	Pool     *pgxpool.Pool
+	Auth     *auth.Service
+	GameData *gamedata.Service
+	Guide    *guide.Service
+	Server   *httpapi.Server
 }
 
 // New connects to the database, runs migrations when configured and builds
 // the HTTP server.
 func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error) {
+	key, err := cfg.SigningKey()
+	if err != nil {
+		return nil, fmt.Errorf("app: %w", err)
+	}
+	store, err := storage.New(storage.Config{
+		Endpoint:        cfg.S3Endpoint,
+		PublicEndpoint:  cfg.S3PublicEndpoint,
+		Region:          cfg.S3Region,
+		Bucket:          cfg.S3Bucket,
+		AccessKeyID:     cfg.S3AccessKeyID,
+		SecretAccessKey: cfg.S3SecretAccessKey,
+		PresignTTL:      cfg.PresignTTL,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("app: %w", err)
+	}
+
 	pool, err := db.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
@@ -50,13 +76,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		}
 	}
 
-	key, err := cfg.SigningKey()
-	if err != nil {
-		pool.Close()
-		return nil, fmt.Errorf("app: %w", err)
-	}
 	tokens := auth.NewTokens(key, cfg.JWTIssuer, cfg.JWTAudience, cfg.AccessTTL)
-
 	var google auth.GoogleIdentity
 	if cfg.GoogleEnabled() {
 		google = auth.NewGoogleOAuth(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
@@ -67,6 +87,11 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		Google:      google,
 		Logger:      log,
 	})
+
+	urls := media.NewURLs(cfg.PublicBaseURL)
+	mediaSvc := media.NewService(imaging.New(webpQuality), store, urls)
+	gameSvc := gamedata.NewService(gamedata.NewPostgresStore(pool))
+	guideSvc := guide.NewService(guide.NewPostgresStore(pool))
 
 	srv := httpapi.New(httpapi.Config{
 		Title:          Title,
@@ -79,9 +104,19 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 	register(srv.API,
 		health.NewHandler(pool),
 		auth.NewHandler(authSvc, tokens),
+		gamedata.NewHandler(gameSvc, urls),
+		guide.NewHandler(guideSvc, urls),
+		media.NewHandler(mediaSvc),
 	)
 
-	return &App{Config: cfg, Pool: pool, Auth: authSvc, Server: srv}, nil
+	return &App{
+		Config:   cfg,
+		Pool:     pool,
+		Auth:     authSvc,
+		GameData: gameSvc,
+		Guide:    guideSvc,
+		Server:   srv,
+	}, nil
 }
 
 // Close releases the database pool.
@@ -94,6 +129,9 @@ func OpenAPI() ([]byte, error) {
 	register(srv.API,
 		health.NewHandler(nil),
 		auth.NewHandler(nil, nil),
+		gamedata.NewHandler(nil, nil),
+		guide.NewHandler(nil, nil),
+		media.NewHandler(nil),
 	)
 	return srv.API.OpenAPI().MarshalJSON()
 }
