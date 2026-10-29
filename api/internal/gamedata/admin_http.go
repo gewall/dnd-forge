@@ -103,22 +103,22 @@ type idInput struct {
 
 type createRaceInput struct{ Body RaceRequest }
 type updateRaceInput struct {
-	idInput
+	ID   uuid.UUID `path:"id"`
 	Body RaceRequest
 }
 type createSubraceInput struct {
-	idInput
+	ID   uuid.UUID `path:"id"`
 	Body SubraceRequest
 }
 type subraceOutput struct{ Body SubraceDTO }
 type createClassInput struct{ Body ClassRequest }
 type updateClassInput struct {
-	idInput
+	ID   uuid.UUID `path:"id"`
 	Body ClassRequest
 }
 type createBackgroundInput struct{ Body BackgroundRequest }
 type updateBackgroundInput struct {
-	idInput
+	ID   uuid.UUID `path:"id"`
 	Body BackgroundRequest
 }
 

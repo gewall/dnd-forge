@@ -68,6 +68,8 @@ func TestHTTPFlow(t *testing.T) {
 		want                            int
 	}{
 		{"owner reads", http.MethodGet, "/v1/characters/" + id, "alice", "", http.StatusOK},
+		{"owner updates", http.MethodPut, "/v1/characters/" + id, "alice", strings.Replace(body, "Lia", "Lia Baru", 1), http.StatusOK},
+		{"stranger updates", http.MethodPut, "/v1/characters/" + id, "bob", body, http.StatusNotFound},
 		{"stranger reads", http.MethodGet, "/v1/characters/" + id, "bob", "", http.StatusNotFound},
 		{"stranger deletes", http.MethodDelete, "/v1/characters/" + id, "bob", "", http.StatusNotFound},
 		{"bad id", http.MethodGet, "/v1/characters/not-a-uuid", "alice", "", http.StatusUnprocessableEntity},

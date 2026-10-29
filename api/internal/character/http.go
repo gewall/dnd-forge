@@ -88,7 +88,7 @@ type idInput struct {
 
 type createInput struct{ Body CharacterRequest }
 type updateInput struct {
-	idInput
+	ID   uuid.UUID `path:"id"`
 	Body CharacterRequest
 }
 type characterOutput struct{ Body CharacterDTO }

@@ -70,12 +70,12 @@ type idInput struct {
 
 type createCategoryInput struct{ Body CategoryRequest }
 type updateCategoryInput struct {
-	idInput
+	ID   uuid.UUID `path:"id"`
 	Body CategoryRequest
 }
 type createArticleInput struct{ Body ArticleRequest }
 type updateArticleInput struct {
-	idInput
+	ID   uuid.UUID `path:"id"`
 	Body ArticleRequest
 }
 
