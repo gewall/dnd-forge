@@ -41,6 +41,11 @@ func TestCreateArticleRequestContract(t *testing.T) {
 		return rec
 	}
 
+	noCover := `{"categoryId":"` + f.cat.ID.String() + `","slug":"tanpa-cover","title":"x","status":"DRAFT","coverKey":""}`
+	if rec := post(noCover); rec.Code != http.StatusCreated {
+		t.Errorf("empty coverKey = %d, want 201: %s", rec.Code, rec.Body)
+	}
+
 	minimal := `{"categoryId":"` + f.cat.ID.String() + `","slug":"minimal","title":"Minimal","status":"DRAFT"}`
 	if rec := post(minimal); rec.Code != http.StatusCreated {
 		t.Errorf("minimal body = %d, want 201: %s", rec.Code, rec.Body)

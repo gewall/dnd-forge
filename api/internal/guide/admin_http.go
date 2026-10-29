@@ -55,7 +55,7 @@ type ArticleRequest struct {
 	Title      string    `json:"title" minLength:"1" maxLength:"160"`
 	Excerpt    string    `json:"excerpt,omitempty" maxLength:"500"`
 	Content    string    `json:"content,omitempty" maxLength:"200000" doc:"Markdown"`
-	CoverKey   string    `json:"coverKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$" doc:"key dari POST /v1/admin/uploads"`
+	CoverKey   string    `json:"coverKey,omitempty" pattern:"^(content/[0-9a-f-]{36}\\.webp)?$" doc:"key dari POST /v1/admin/uploads; kosong = tanpa gambar"`
 	SortOrder  int       `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	Status     Status    `json:"status" enum:"DRAFT,PUBLISHED"`
 }

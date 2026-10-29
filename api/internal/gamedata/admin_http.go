@@ -59,7 +59,7 @@ type RaceRequest struct {
 	Description  string     `json:"description,omitempty" maxLength:"8000"`
 	Traits       []TraitDTO `json:"traits,omitempty" maxItems:"30"`
 	VisualPrompt string     `json:"visualPrompt,omitempty" maxLength:"500" doc:"Bahasa Inggris, dipakai prompt gambar"`
-	ImageKey     string     `json:"imageKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$" doc:"key dari POST /v1/admin/uploads"`
+	ImageKey     string     `json:"imageKey,omitempty" pattern:"^(content/[0-9a-f-]{36}\\.webp)?$" doc:"key dari POST /v1/admin/uploads; kosong = tanpa gambar"`
 	SortOrder    int        `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	IsActive     bool       `json:"isActive"`
 }
@@ -81,7 +81,7 @@ type ClassRequest struct {
 	Description    string     `json:"description,omitempty" maxLength:"8000"`
 	Features       []TraitDTO `json:"features,omitempty" maxItems:"40"`
 	VisualPrompt   string     `json:"visualPrompt,omitempty" maxLength:"500"`
-	ImageKey       string     `json:"imageKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$"`
+	ImageKey       string     `json:"imageKey,omitempty" pattern:"^(content/[0-9a-f-]{36}\\.webp)?$"`
 	SortOrder      int        `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	IsActive       bool       `json:"isActive"`
 }
@@ -92,7 +92,7 @@ type BackgroundRequest struct {
 	Description        string   `json:"description,omitempty" maxLength:"8000"`
 	SkillProficiencies []string `json:"skillProficiencies,omitempty" maxItems:"10"`
 	VisualPrompt       string   `json:"visualPrompt,omitempty" maxLength:"500"`
-	ImageKey           string   `json:"imageKey,omitempty" pattern:"^content/[0-9a-f-]{36}\\.webp$"`
+	ImageKey           string   `json:"imageKey,omitempty" pattern:"^(content/[0-9a-f-]{36}\\.webp)?$"`
 	SortOrder          int      `json:"sortOrder,omitempty" minimum:"0" maximum:"10000"`
 	IsActive           bool     `json:"isActive"`
 }
