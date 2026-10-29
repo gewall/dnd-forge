@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gewall/dnd-forge/api/internal/auth"
+	"github.com/gewall/dnd-forge/api/internal/character"
 	"github.com/gewall/dnd-forge/api/internal/config"
 	"github.com/gewall/dnd-forge/api/internal/db"
 	"github.com/gewall/dnd-forge/api/internal/gamedata"
@@ -25,7 +26,7 @@ import (
 
 const (
 	Title   = "DnD Forge API"
-	Version = "0.2.0"
+	Version = "0.3.0"
 
 	webpQuality = 82
 )
@@ -92,6 +93,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 	mediaSvc := media.NewService(imaging.New(webpQuality), store, urls)
 	gameSvc := gamedata.NewService(gamedata.NewPostgresStore(pool))
 	guideSvc := guide.NewService(guide.NewPostgresStore(pool))
+	charSvc := character.NewService(character.NewPostgresStore(pool), character.NewGameDataCatalog(gameSvc))
 
 	srv := httpapi.New(httpapi.Config{
 		Title:          Title,
@@ -107,6 +109,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		gamedata.NewHandler(gameSvc, urls),
 		guide.NewHandler(guideSvc, urls),
 		media.NewHandler(mediaSvc),
+		character.NewHandler(charSvc),
 	)
 
 	return &App{
@@ -132,6 +135,7 @@ func OpenAPI() ([]byte, error) {
 		gamedata.NewHandler(nil, nil),
 		guide.NewHandler(nil, nil),
 		media.NewHandler(nil),
+		character.NewHandler(nil),
 	)
 	return srv.API.OpenAPI().MarshalJSON()
 }
