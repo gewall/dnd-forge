@@ -107,10 +107,7 @@ func (h *Handler) list(ctx context.Context, _ *struct{}) (*listOutput, error) {
 
 func (h *Handler) create(ctx context.Context, in *createInput) (*providerOutput, error) {
 	return httpapi.AsUser(ctx, func(actor uuid.UUID) (*providerOutput, error) {
-		b := in.Body
-		p, err := h.svc.Create(ctx, actor, Input{
-			Type: b.Type, Capability: b.Capability, Label: b.Label, DefaultModel: b.DefaultModel, APIKey: b.APIKey,
-		})
+		p, err := h.svc.Create(ctx, actor, Input(in.Body))
 		return httpapi.Respond(ctx, p, err, toOutput)
 	})
 }

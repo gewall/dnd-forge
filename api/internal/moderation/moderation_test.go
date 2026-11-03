@@ -19,7 +19,7 @@ func (f *fakeStore) DeleteBannedWord(context.Context, string) error { return nil
 func TestSanitize(t *testing.T) {
 	tests := map[string]string{
 		"  rambut\n\nperak\t ":     "rambut perak",
-		"zero​width":               "zerowidth",
+		"zero\u200bwidth":          "zerowidth",
 		"bell\x07 char":            "bell char",
 		"teks biasa, dengan koma.": "teks biasa, dengan koma.",
 	}

@@ -46,9 +46,9 @@ func (f Fake) Generate(ctx context.Context, in ai.GenerateInput) (ai.GenerateOut
 	for y := range h {
 		for x := range w {
 			img.Set(x, y, color.RGBA{
-				R: uint8((int(seed) + x) % 256),
-				G: uint8((int(seed>>8) + y) % 256),
-				B: uint8((int(seed>>16) + x + y) % 256),
+				R: channel(int(seed) + x),
+				G: channel(int(seed>>8) + y),
+				B: channel(int(seed>>16) + x + y),
 				A: 255,
 			})
 		}
@@ -61,3 +61,8 @@ func (f Fake) Generate(ctx context.Context, in ai.GenerateInput) (ai.GenerateOut
 }
 
 func (Fake) TestConnection(context.Context, string) error { return nil }
+
+// channel wraps n into a colour channel value.
+func channel(n int) uint8 {
+	return uint8(n % 256) //nolint:gosec // G115: n is never negative, so % 256 keeps it in range
+}
