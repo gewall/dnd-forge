@@ -72,8 +72,13 @@ func TestPostgresProviders(t *testing.T) {
 	if err := svc.Activate(ctx, uuid.Nil, first.ID); err != nil {
 		t.Fatal(err)
 	}
-	if sel, err := svc.Active(ctx, ai.Text); err != nil || sel.Model != "deepseek-v4-flash" {
-		t.Errorf("activating an image provider changed the text one: %+v, %v", sel, err)
+	var textActive bool
+	if err := pool.QueryRow(ctx, "SELECT is_active FROM ai_providers WHERE capability = 'text'").Scan(&textActive); err != nil || !textActive {
+		t.Errorf("activating an image provider deactivated the text one: active=%v, %v", textActive, err)
+	}
+	// This build registers no deepseek vendor, so its active row counts as none.
+	if _, err := svc.Active(ctx, ai.Text); !errors.Is(err, ErrNoTextProvider) {
+		t.Errorf("Active(text) with an unregistered vendor err = %v, want ErrNoTextProvider", err)
 	}
 
 	impl, key, err := svc.ResolveImage(ctx, first.ID)
