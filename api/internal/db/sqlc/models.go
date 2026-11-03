@@ -178,6 +178,7 @@ type AiProvider struct {
 	IsActive        bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+	Capability      string
 }
 
 type AppSetting struct {
@@ -295,6 +296,7 @@ type PromptTemplate struct {
 	IsActive       bool
 	CreatedBy      *uuid.UUID
 	CreatedAt      time.Time
+	Kind           string
 }
 
 type Race struct {

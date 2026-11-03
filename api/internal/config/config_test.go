@@ -18,6 +18,7 @@ func setValidEnv(t *testing.T) {
 	t.Setenv("S3_BUCKET", "bucket")
 	t.Setenv("S3_ACCESS_KEY_ID", "key")
 	t.Setenv("S3_SECRET_ACCESS_KEY", "secret")
+	t.Setenv("ENCRYPTION_KEY", base64.StdEncoding.EncodeToString(make([]byte, 32)))
 }
 
 func TestLoad(t *testing.T) {
@@ -42,6 +43,8 @@ func TestLoadRejects(t *testing.T) {
 		"google half set":      {"GOOGLE_CLIENT_ID": "id"},
 		"missing database url": {"DATABASE_URL": ""},
 		"missing s3 bucket":    {"S3_BUCKET": ""},
+		"short encryption key": {"ENCRYPTION_KEY": base64.StdEncoding.EncodeToString(make([]byte, 16))},
+		"no portrait workers":  {"PORTRAIT_WORKERS": "0"},
 	}
 	for name, env := range tests {
 		t.Run(name, func(t *testing.T) {

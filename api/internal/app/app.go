@@ -7,13 +7,21 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 
+	"github.com/gewall/dnd-forge/api/internal/ai"
+	"github.com/gewall/dnd-forge/api/internal/ai/providers"
+	"github.com/gewall/dnd-forge/api/internal/aiprovider"
 	"github.com/gewall/dnd-forge/api/internal/auth"
 	"github.com/gewall/dnd-forge/api/internal/character"
 	"github.com/gewall/dnd-forge/api/internal/config"
+	"github.com/gewall/dnd-forge/api/internal/crypto"
 	"github.com/gewall/dnd-forge/api/internal/db"
 	"github.com/gewall/dnd-forge/api/internal/gamedata"
 	"github.com/gewall/dnd-forge/api/internal/guide"
@@ -21,14 +29,21 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/httpapi"
 	"github.com/gewall/dnd-forge/api/internal/imaging"
 	"github.com/gewall/dnd-forge/api/internal/media"
+	"github.com/gewall/dnd-forge/api/internal/moderation"
+	"github.com/gewall/dnd-forge/api/internal/portrait"
+	"github.com/gewall/dnd-forge/api/internal/prompt"
 	"github.com/gewall/dnd-forge/api/internal/storage"
 )
 
 const (
 	Title   = "DnD Forge API"
-	Version = "0.3.0"
+	Version = "0.4.0"
 
 	webpQuality = 82
+
+	// fakeDelay makes the fake provider slow enough to see PENDING when
+	// polling.
+	fakeDelay = 2 * time.Second
 )
 
 // Registrar is implemented by every feature handler.
@@ -44,12 +59,20 @@ type App struct {
 	GameData *gamedata.Service
 	Guide    *guide.Service
 	Server   *httpapi.Server
+
+	// jobs runs background work; it only starts with StartWorkers, so the
+	// tools command never executes jobs.
+	jobs *river.Client[pgx.Tx]
 }
 
 // New connects to the database, runs migrations when configured and builds
-// the HTTP server.
+// the HTTP server and the background job client.
 func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error) {
 	key, err := cfg.SigningKey()
+	if err != nil {
+		return nil, fmt.Errorf("app: %w", err)
+	}
+	sealer, err := sealerFor(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("app: %w", err)
 	}
@@ -95,6 +118,47 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 	guideSvc := guide.NewService(guide.NewPostgresStore(pool))
 	charSvc := character.NewService(character.NewPostgresStore(pool), character.NewGameDataCatalog(gameSvc))
 
+	aiSvc := aiprovider.NewService(aiprovider.NewPostgresStore(pool), sealer, registryFor(cfg))
+	promptSvc := prompt.NewService(prompt.NewPostgresStore(pool))
+	seeded, err := promptSvc.SeedDefaults(ctx)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("app: %w", err)
+	}
+	if len(seeded) > 0 {
+		log.Info("seeded default prompt templates", "kinds", seeded)
+	}
+	modSvc := moderation.NewService(moderation.NewPostgresStore(pool))
+
+	// Requests enqueue through an insert-only client, which exists before
+	// the workers that need the portrait service.
+	driver := riverpgxv5.New(pool)
+	inserter, err := river.NewClient(driver, &river.Config{Logger: log})
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("app: river: %w", err)
+	}
+	portraitSvc := portrait.NewService(portrait.Deps{
+		Store:     portrait.NewPostgresStore(pool, inserter),
+		Providers: aiSvc,
+		Templates: promptSvc,
+		Moderator: modSvc,
+		Encoder:   imaging.New(webpQuality),
+		Objects:   store,
+		Logger:    log,
+	})
+	workers := river.NewWorkers()
+	river.AddWorker(workers, portrait.NewWorker(portraitSvc))
+	jobs, err := river.NewClient(driver, &river.Config{
+		Queues:  map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: cfg.PortraitWorkers}},
+		Workers: workers,
+		Logger:  log,
+	})
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("app: river: %w", err)
+	}
+
 	srv := httpapi.New(httpapi.Config{
 		Title:          Title,
 		Version:        Version,
@@ -110,6 +174,10 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		guide.NewHandler(guideSvc, urls),
 		media.NewHandler(mediaSvc),
 		character.NewHandler(charSvc),
+		aiprovider.NewHandler(aiSvc),
+		prompt.NewHandler(promptSvc),
+		moderation.NewHandler(modSvc),
+		portrait.NewHandler(portraitSvc, urls),
 	)
 
 	return &App{
@@ -119,11 +187,52 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		GameData: gameSvc,
 		Guide:    guideSvc,
 		Server:   srv,
+		jobs:     jobs,
 	}, nil
+}
+
+// StartWorkers starts executing background jobs. Cancelling ctx does not
+// stop them; call StopWorkers for a graceful stop.
+func (a *App) StartWorkers(ctx context.Context) error {
+	if err := a.jobs.Start(context.WithoutCancel(ctx)); err != nil {
+		return fmt.Errorf("app: start workers: %w", err)
+	}
+	return nil
+}
+
+// StopWorkers waits for running jobs until ctx ends, then cancels them;
+// River retries cancelled jobs on the next start.
+func (a *App) StopWorkers(ctx context.Context) error {
+	if err := a.jobs.Stop(ctx); err == nil {
+		return nil
+	}
+	cancelCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := a.jobs.StopAndCancel(cancelCtx); err != nil {
+		return fmt.Errorf("app: stop workers: %w", err)
+	}
+	return nil
 }
 
 // Close releases the database pool.
 func (a *App) Close() { a.Pool.Close() }
+
+func sealerFor(cfg config.Config) (*crypto.Sealer, error) {
+	key, err := cfg.EncryptionKeyBytes()
+	if err != nil {
+		return nil, err
+	}
+	return crypto.NewSealer(key)
+}
+
+// registryFor lists the AI vendors this deployment can call.
+func registryFor(cfg config.Config) *ai.Registry {
+	vendors := []ai.Vendor{providers.NewOpenAI(cfg.OpenAIBaseURL)}
+	if cfg.IsDev() || cfg.AIFakeProvider {
+		vendors = append(vendors, providers.Fake{Delay: fakeDelay})
+	}
+	return ai.NewRegistry(vendors...)
+}
 
 // OpenAPI builds the router with inert handlers and returns the OpenAPI 3.1
 // document, without touching the database or any secret.
@@ -136,6 +245,10 @@ func OpenAPI() ([]byte, error) {
 		guide.NewHandler(nil, nil),
 		media.NewHandler(nil),
 		character.NewHandler(nil),
+		aiprovider.NewHandler(nil),
+		prompt.NewHandler(nil),
+		moderation.NewHandler(nil),
+		portrait.NewHandler(nil, nil),
 	)
 	return srv.API.OpenAPI().MarshalJSON()
 }

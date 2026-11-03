@@ -67,6 +67,15 @@ func (u URLs) Content(key string) string {
 	return u.base + "/v1/media/" + key
 }
 
+// Portrait returns the stable URL of a portrait image or its thumbnail.
+func (u URLs) Portrait(id uuid.UUID, thumb bool) string {
+	url := u.base + "/v1/media/portraits/" + id.String()
+	if thumb {
+		url += "/thumb"
+	}
+	return url
+}
+
 // Upload is a stored image.
 type Upload struct {
 	Key    string

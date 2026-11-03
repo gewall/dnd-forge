@@ -6,7 +6,7 @@ Backend Go untuk DnD Guide & Character Forge: chi + Huma v2 (OpenAPI 3.1), pgx v
 
 ```sh
 cp .env.example .env              # isi secret dari: go run ./cmd/tools gen-keys
-ssh -N -L 5432:127.0.0.1:5432 vps # tunnel ke DB dev di VPS
+# DATABASE_URL: PostgreSQL milikmu sendiri (DB dev di VPS sudah tidak ada)
 set -a; . ./.env; set +a
 go run ./cmd/api                  # migrasi jalan otomatis (MIGRATE_ON_START)
 go run ./cmd/tools seed                       # data SRD 5.2 + kategori panduan (aman diulang)
@@ -21,7 +21,7 @@ Semua request lain wajib membawa header `X-Internal-Key`.
 | Perintah | Fungsi |
 | --- | --- |
 | `go test ./...` | unit test |
-| `TEST_DATABASE_URL=... go test -p 1 -tags integration ./...` | test store ke PostgreSQL sungguhan |
+| `TEST_DATABASE_URL=... go test -p 1 -tags integration ./...` | test store ke PostgreSQL sungguhan (dijalankan CI) |
 | `sqlc generate` | regenerasi `internal/db/sqlc` dari `internal/db/queries/*.sql` |
 | `go run ./cmd/tools openapi` | tulis `openapi.json` (dipakai frontend untuk generate tipe TS) |
 | `go run ./cmd/tools migrate` | jalankan migrasi tanpa start server |

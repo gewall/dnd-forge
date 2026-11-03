@@ -3,8 +3,6 @@ package media
 import (
 	"context"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 
@@ -68,11 +66,6 @@ type contentInput struct {
 	Name string `path:"name" maxLength:"64"`
 }
 
-type redirectOutput struct {
-	Location     string `header:"Location"`
-	CacheControl string `header:"Cache-Control"`
-}
-
 func (h *Handler) upload(ctx context.Context, in *uploadInput) (*uploadOutput, error) {
 	f := in.RawBody.Data().File
 	defer f.Close()
@@ -87,15 +80,10 @@ func (h *Handler) upload(ctx context.Context, in *uploadInput) (*uploadOutput, e
 	return &uploadOutput{Body: UploadDTO(up)}, nil
 }
 
-func (h *Handler) contentImage(ctx context.Context, in *contentInput) (*redirectOutput, error) {
+func (h *Handler) contentImage(ctx context.Context, in *contentInput) (*httpapi.Redirect, error) {
 	url, ttl, err := h.svc.ContentURL(ctx, in.Name)
 	if err != nil {
 		return nil, httpapi.Error(ctx, err)
 	}
-	// Let browsers reuse the redirect for most of the signature's lifetime.
-	maxAge := int((ttl - 10*time.Minute).Seconds())
-	return &redirectOutput{
-		Location:     url,
-		CacheControl: "public, max-age=" + strconv.Itoa(max(maxAge, 0)),
-	}, nil
+	return httpapi.NewRedirect(url, ttl), nil
 }

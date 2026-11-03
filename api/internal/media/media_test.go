@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/gewall/dnd-forge/api/internal/imaging"
 )
 
@@ -78,5 +80,16 @@ func TestURLsContent(t *testing.T) {
 	}
 	if got := u.Content("content/a.webp"); got != "https://api.example.com/v1/media/content/a.webp" {
 		t.Errorf("got %q", got)
+	}
+}
+
+func TestURLsPortrait(t *testing.T) {
+	u := NewURLs("https://api.example.com")
+	id := uuid.MustParse("4f1c7a52-0d8e-4c6b-9a43-0f7d2b1e9c11")
+	if got := u.Portrait(id, false); got != "https://api.example.com/v1/media/portraits/4f1c7a52-0d8e-4c6b-9a43-0f7d2b1e9c11" {
+		t.Errorf("full = %q", got)
+	}
+	if got := u.Portrait(id, true); got != "https://api.example.com/v1/media/portraits/4f1c7a52-0d8e-4c6b-9a43-0f7d2b1e9c11/thumb" {
+		t.Errorf("thumb = %q", got)
 	}
 }

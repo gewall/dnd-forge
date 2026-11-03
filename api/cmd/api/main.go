@@ -56,6 +56,10 @@ func run() error {
 		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelWarn),
 	}
 
+	if err := a.StartWorkers(ctx); err != nil {
+		return err
+	}
+
 	errc := make(chan error, 1)
 	go func() {
 		log.Info("api listening", "addr", cfg.HTTPAddr, "env", cfg.Env, "version", app.Version)
@@ -71,11 +75,16 @@ func run() error {
 	case <-ctx.Done():
 	}
 
+	// Stop taking requests first, then let running jobs finish.
 	log.Info("shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		return fmt.Errorf("shutdown: %w", err)
+	httpErr := srv.Shutdown(shutdownCtx)
+	if err := a.StopWorkers(shutdownCtx); err != nil {
+		log.Warn("workers did not stop cleanly", "err", err)
+	}
+	if httpErr != nil {
+		return fmt.Errorf("shutdown: %w", httpErr)
 	}
 	return nil
 }

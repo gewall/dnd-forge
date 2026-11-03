@@ -52,6 +52,16 @@ type Config struct {
 	S3AccessKeyID     string        `env:"S3_ACCESS_KEY_ID,required,notEmpty"`
 	S3SecretAccessKey string        `env:"S3_SECRET_ACCESS_KEY,required,notEmpty"`
 	PresignTTL        time.Duration `env:"PRESIGN_TTL" envDefault:"6h"`
+
+	// EncryptionKey (base64, 32 byte) encrypts AI provider API keys at rest.
+	EncryptionKey string `env:"ENCRYPTION_KEY,required,notEmpty"`
+	// OpenAIBaseURL is overridable for tests and compatible gateways.
+	OpenAIBaseURL string `env:"OPENAI_BASE_URL" envDefault:"https://api.openai.com/v1"`
+	// PortraitWorkers bounds concurrent image generations (RAM on the VPS).
+	PortraitWorkers int `env:"PORTRAIT_WORKERS" envDefault:"1"`
+	// AIFakeProvider registers the free, offline fake provider outside
+	// development, for end-to-end checks without a vendor key.
+	AIFakeProvider bool `env:"AI_FAKE_PROVIDER"`
 }
 
 // Load reads and validates the configuration from the environment.
@@ -77,6 +87,12 @@ func (c Config) validate() error {
 	if _, err := c.SigningKey(); err != nil {
 		errs = append(errs, err)
 	}
+	if _, err := c.EncryptionKeyBytes(); err != nil {
+		errs = append(errs, err)
+	}
+	if c.PortraitWorkers < 1 {
+		errs = append(errs, errors.New("PORTRAIT_WORKERS must be at least 1"))
+	}
 	if c.GoogleClientID != "" && (c.GoogleClientSecret == "" || c.GoogleRedirectURL == "") {
 		errs = append(errs, errors.New("GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URL are required when GOOGLE_CLIENT_ID is set"))
 	}
@@ -88,6 +104,18 @@ func (c Config) IsDev() bool { return c.Env == "development" }
 
 // GoogleEnabled reports whether Google sign-in is configured.
 func (c Config) GoogleEnabled() bool { return c.GoogleClientID != "" }
+
+// EncryptionKeyBytes decodes ENCRYPTION_KEY.
+func (c Config) EncryptionKeyBytes() ([]byte, error) {
+	key, err := base64.StdEncoding.DecodeString(c.EncryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("ENCRYPTION_KEY is not valid base64: %w", err)
+	}
+	if len(key) != 32 {
+		return nil, fmt.Errorf("ENCRYPTION_KEY must decode to 32 bytes, got %d", len(key))
+	}
+	return key, nil
+}
 
 // SigningKey decodes JWT_PRIVATE_KEY into an Ed25519 private key.
 func (c Config) SigningKey() (ed25519.PrivateKey, error) {
