@@ -24,7 +24,8 @@ var (
 	ErrSubraceForbidden = apperr.New(apperr.Invalid, "ras ini tidak punya subras")
 )
 
-// Draft holds what the wizard submits.
+// Draft holds what the wizard submits. A nil Backstory keeps the stored
+// one on update and means none on create.
 type Draft struct {
 	Name         string
 	Gender       string
@@ -33,6 +34,7 @@ type Draft struct {
 	ClassID      uuid.UUID
 	BackgroundID uuid.UUID
 	Appearance   string
+	Backstory    *string
 	IsPublic     bool
 }
 
@@ -50,6 +52,7 @@ type Character struct {
 	Name       string
 	Gender     string
 	Appearance string
+	Backstory  string
 	IsPublic   bool
 	Race       Ref
 	Subrace    *Ref

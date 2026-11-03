@@ -55,7 +55,8 @@ func (s *PostgresStore) CountByUser(ctx context.Context, userID uuid.UUID) (int,
 func (s *PostgresStore) CreateCharacter(ctx context.Context, userID uuid.UUID, d Draft) (uuid.UUID, error) {
 	id, err := s.q.CreateCharacter(ctx, sqlc.CreateCharacterParams{
 		UserID: userID, Name: d.Name, Gender: d.Gender, RaceID: d.RaceID, SubraceID: d.SubraceID,
-		ClassID: d.ClassID, BackgroundID: d.BackgroundID, Appearance: d.Appearance, IsPublic: d.IsPublic,
+		ClassID: d.ClassID, BackgroundID: d.BackgroundID, Appearance: d.Appearance, Backstory: deref(d.Backstory),
+		IsPublic: d.IsPublic,
 	})
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("create character: %w", err)
@@ -66,7 +67,8 @@ func (s *PostgresStore) CreateCharacter(ctx context.Context, userID uuid.UUID, d
 func (s *PostgresStore) UpdateCharacter(ctx context.Context, id, userID uuid.UUID, d Draft) error {
 	n, err := s.q.UpdateCharacter(ctx, sqlc.UpdateCharacterParams{
 		ID: id, UserID: userID, Name: d.Name, Gender: d.Gender, RaceID: d.RaceID, SubraceID: d.SubraceID,
-		ClassID: d.ClassID, BackgroundID: d.BackgroundID, Appearance: d.Appearance, IsPublic: d.IsPublic,
+		ClassID: d.ClassID, BackgroundID: d.BackgroundID, Appearance: d.Appearance, Backstory: d.Backstory,
+		IsPublic: d.IsPublic,
 	})
 	if err != nil {
 		return fmt.Errorf("update character: %w", err)
@@ -90,7 +92,8 @@ func (s *PostgresStore) DeleteCharacter(ctx context.Context, id, userID uuid.UUI
 
 func toCharacter(r sqlc.CharacterByIDRow) Character {
 	c := Character{
-		ID: r.ID, UserID: r.UserID, Name: r.Name, Gender: r.Gender, Appearance: r.Appearance, IsPublic: r.IsPublic,
+		ID: r.ID, UserID: r.UserID, Name: r.Name, Gender: r.Gender, Appearance: r.Appearance, Backstory: r.Backstory,
+		IsPublic:   r.IsPublic,
 		Race:       Ref{ID: r.RaceID, Slug: r.RaceSlug, Name: r.RaceName},
 		Class:      Ref{ID: r.ClassID, Slug: r.ClassSlug, Name: r.ClassName},
 		Background: Ref{ID: r.BackgroundID, Slug: r.BackgroundSlug, Name: r.BackgroundName},

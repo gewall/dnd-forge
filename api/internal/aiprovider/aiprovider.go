@@ -84,6 +84,7 @@ type Sealer interface {
 type Registry interface {
 	Vendor(t ai.ProviderType) (ai.Vendor, error)
 	Image(t ai.ProviderType) (ai.ImageProvider, error)
+	Text(t ai.ProviderType) (ai.TextProvider, error)
 	Supports(t ai.ProviderType, c ai.Capability) bool
 	Types() []ai.TypeInfo
 }
@@ -214,6 +215,20 @@ func (s *Service) ResolveImage(ctx context.Context, id uuid.UUID) (ai.ImageProvi
 		return nil, "", err
 	}
 	impl, err := s.registry.Image(p.Type)
+	if err != nil {
+		return nil, "", err
+	}
+	return impl, key, nil
+}
+
+// ResolveText returns the text implementation and decrypted key of a
+// provider. The key must stay in memory and never be logged.
+func (s *Service) ResolveText(ctx context.Context, id uuid.UUID) (ai.TextProvider, string, error) {
+	p, key, err := s.credentials(ctx, id)
+	if err != nil {
+		return nil, "", err
+	}
+	impl, err := s.registry.Text(p.Type)
 	if err != nil {
 		return nil, "", err
 	}

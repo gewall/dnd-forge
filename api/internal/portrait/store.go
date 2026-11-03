@@ -2,7 +2,6 @@ package portrait
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 
 	"github.com/gewall/dnd-forge/api/internal/db"
 	"github.com/gewall/dnd-forge/api/internal/db/sqlc"
+	"github.com/gewall/dnd-forge/api/internal/quota"
 )
 
 // fallbackDailyQuota applies if the default_daily_quota setting is missing.
@@ -66,18 +66,7 @@ func (s *PostgresStore) DailyLimit(ctx context.Context, userID uuid.UUID) (int, 
 	if own != nil {
 		return int(*own), nil
 	}
-	raw, err := s.q.SettingValue(ctx, "default_daily_quota")
-	if db.IsNoRows(err) {
-		return fallbackDailyQuota, nil
-	}
-	if err != nil {
-		return 0, fmt.Errorf("default quota: %w", err)
-	}
-	var n int
-	if err := json.Unmarshal(raw, &n); err != nil {
-		return fallbackDailyQuota, nil //nolint:nilerr // a malformed setting falls back to the default
-	}
-	return n, nil
+	return quota.DefaultLimit(ctx, s.q, "default_daily_quota", fallbackDailyQuota)
 }
 
 func (s *PostgresStore) CountSince(ctx context.Context, userID uuid.UUID, since time.Time) (int, error) {

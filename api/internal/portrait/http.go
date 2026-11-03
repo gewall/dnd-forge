@@ -53,10 +53,6 @@ func (h *Handler) Register(api huma.API) {
 		OperationID: "getPortrait", Method: http.MethodGet, Path: "/v1/portraits/{id}",
 		Summary: "Status dan URL portrait", Tags: tags, Errors: []int{missing},
 	}), h.get)
-	huma.Register(api, httpapi.Authenticated(huma.Operation{
-		OperationID: "myQuota", Method: http.MethodGet, Path: "/v1/me/quota",
-		Summary: "Sisa kuota generate hari ini (reset tengah malam WIB)", Tags: tags,
-	}), h.quota)
 	huma.Register(api, huma.Operation{
 		OperationID: "gallery", Method: http.MethodGet, Path: "/v1/gallery",
 		Summary:     "Galeri karakter publik dengan portrait terbarunya",
@@ -110,17 +106,6 @@ type PortraitList struct {
 	Items []PortraitDTO `json:"items"`
 }
 
-type QuotaDTO struct {
-	Limit     int       `json:"limit"`
-	Used      int       `json:"used"`
-	Remaining int       `json:"remaining"`
-	ResetsAt  time.Time `json:"resetsAt"`
-}
-
-type QuotasDTO struct {
-	Portrait QuotaDTO `json:"portrait"`
-}
-
 type GalleryItemDTO struct {
 	PortraitID    uuid.UUID `json:"portraitId"`
 	CharacterID   uuid.UUID `json:"characterId"`
@@ -155,7 +140,6 @@ type galleryInput struct {
 
 type portraitOutput struct{ Body PortraitDTO }
 type listOutput struct{ Body PortraitList }
-type quotaOutput struct{ Body QuotasDTO }
 type galleryOutput struct{ Body GalleryPage }
 
 // Handlers -------------------------------------------------------------------
@@ -185,15 +169,6 @@ func (h *Handler) get(ctx context.Context, in *idInput) (*portraitOutput, error)
 	return httpapi.AsUser(ctx, func(userID uuid.UUID) (*portraitOutput, error) {
 		p, err := h.svc.Get(ctx, userID, in.ID)
 		return httpapi.Respond(ctx, p, err, h.toOutput)
-	})
-}
-
-func (h *Handler) quota(ctx context.Context, _ *struct{}) (*quotaOutput, error) {
-	return httpapi.AsUser(ctx, func(userID uuid.UUID) (*quotaOutput, error) {
-		q, err := h.svc.Quota(ctx, userID)
-		return httpapi.Respond(ctx, q, err, func(q Quota) *quotaOutput {
-			return &quotaOutput{Body: QuotasDTO{Portrait: QuotaDTO(q)}}
-		})
 	})
 }
 

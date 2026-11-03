@@ -13,7 +13,7 @@ import (
 )
 
 const characterByID = `-- name: CharacterByID :one
-SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.is_public, c.created_at, c.updated_at,
+SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.backstory, c.is_public, c.created_at, c.updated_at,
        r.id AS race_id, r.slug AS race_slug, r.name AS race_name,
        s.id AS subrace_id, s.slug AS subrace_slug, s.name AS subrace_name,
        k.id AS class_id, k.slug AS class_slug, k.name AS class_name,
@@ -32,6 +32,7 @@ type CharacterByIDRow struct {
 	Name           string
 	Gender         string
 	Appearance     string
+	Backstory      string
 	IsPublic       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
@@ -58,6 +59,7 @@ func (q *Queries) CharacterByID(ctx context.Context, id uuid.UUID) (CharacterByI
 		&i.Name,
 		&i.Gender,
 		&i.Appearance,
+		&i.Backstory,
 		&i.IsPublic,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -89,8 +91,8 @@ func (q *Queries) CountCharactersByUser(ctx context.Context, userID uuid.UUID) (
 }
 
 const createCharacter = `-- name: CreateCharacter :one
-INSERT INTO characters (user_id, name, gender, race_id, subrace_id, class_id, background_id, appearance, is_public)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO characters (user_id, name, gender, race_id, subrace_id, class_id, background_id, appearance, backstory, is_public)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING id
 `
 
@@ -103,6 +105,7 @@ type CreateCharacterParams struct {
 	ClassID      uuid.UUID
 	BackgroundID uuid.UUID
 	Appearance   string
+	Backstory    string
 	IsPublic     bool
 }
 
@@ -116,6 +119,7 @@ func (q *Queries) CreateCharacter(ctx context.Context, arg CreateCharacterParams
 		arg.ClassID,
 		arg.BackgroundID,
 		arg.Appearance,
+		arg.Backstory,
 		arg.IsPublic,
 	)
 	var id uuid.UUID
@@ -141,7 +145,7 @@ func (q *Queries) DeleteCharacter(ctx context.Context, arg DeleteCharacterParams
 }
 
 const listCharactersByUser = `-- name: ListCharactersByUser :many
-SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.is_public, c.created_at, c.updated_at,
+SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.backstory, c.is_public, c.created_at, c.updated_at,
        r.id AS race_id, r.slug AS race_slug, r.name AS race_name,
        s.id AS subrace_id, s.slug AS subrace_slug, s.name AS subrace_name,
        k.id AS class_id, k.slug AS class_slug, k.name AS class_name,
@@ -161,6 +165,7 @@ type ListCharactersByUserRow struct {
 	Name           string
 	Gender         string
 	Appearance     string
+	Backstory      string
 	IsPublic       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
@@ -193,6 +198,7 @@ func (q *Queries) ListCharactersByUser(ctx context.Context, userID uuid.UUID) ([
 			&i.Name,
 			&i.Gender,
 			&i.Appearance,
+			&i.Backstory,
 			&i.IsPublic,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -222,7 +228,7 @@ func (q *Queries) ListCharactersByUser(ctx context.Context, userID uuid.UUID) ([
 const updateCharacter = `-- name: UpdateCharacter :execrows
 UPDATE characters SET
   name = $3, gender = $4, race_id = $5, subrace_id = $6, class_id = $7, background_id = $8,
-  appearance = $9, is_public = $10, updated_at = now()
+  appearance = $9, is_public = $10, backstory = coalesce($11, backstory), updated_at = now()
 WHERE id = $1 AND user_id = $2
 `
 
@@ -237,8 +243,10 @@ type UpdateCharacterParams struct {
 	BackgroundID uuid.UUID
 	Appearance   string
 	IsPublic     bool
+	Backstory    *string
 }
 
+// A NULL backstory keeps the stored one.
 func (q *Queries) UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) (int64, error) {
 	result, err := q.db.Exec(ctx, updateCharacter,
 		arg.ID,
@@ -251,6 +259,7 @@ func (q *Queries) UpdateCharacter(ctx context.Context, arg UpdateCharacterParams
 		arg.BackgroundID,
 		arg.Appearance,
 		arg.IsPublic,
+		arg.Backstory,
 	)
 	if err != nil {
 		return 0, err

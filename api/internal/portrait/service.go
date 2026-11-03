@@ -14,6 +14,7 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/aiprovider"
 	"github.com/gewall/dnd-forge/api/internal/imaging"
 	"github.com/gewall/dnd-forge/api/internal/prompt"
+	"github.com/gewall/dnd-forge/api/internal/quota"
 )
 
 // Store reads and updates portraits outside of a transaction.
@@ -142,7 +143,7 @@ func (s *Service) Request(ctx context.Context, userID, characterID uuid.UUID, r 
 		ClassVisual:      subj.ClassVisual,
 		BackgroundVisual: subj.BackgroundVisual,
 	})
-	since, _ := startOfDay(s.now())
+	since, _ := quota.Day(s.now())
 
 	var p Portrait
 	err = s.Store.InTx(ctx, func(tx TxStore) error {
@@ -197,7 +198,7 @@ func (s *Service) Generate(ctx context.Context, args GenerateArgs, lastAttempt b
 	case errors.Is(err, ai.ErrRejected):
 		log.WarnContext(ctx, "portrait rejected by provider", "err", err)
 		return s.fail(ctx, p.ID, msgRejected, err)
-	case errors.Is(err, ai.ErrBadKey), errors.Is(err, ai.ErrUnknownProvider), errors.Is(err, ai.ErrUnsupported),
+	case errors.Is(err, ai.ErrBadKey), errors.Is(err, ai.ErrBilling), errors.Is(err, ai.ErrUnknownProvider), errors.Is(err, ai.ErrUnsupported),
 		errors.Is(err, aiprovider.ErrKeyUnreadable):
 		log.ErrorContext(ctx, "portrait provider misconfigured", "err", err)
 		return s.fail(ctx, p.ID, msgConfig, err)
@@ -259,18 +260,18 @@ func (s *Service) ListForCharacter(ctx context.Context, userID, characterID uuid
 	return s.Store.PortraitsOf(ctx, characterID, userID)
 }
 
-// Quota reports the user's allowance for today (WIB).
-func (s *Service) Quota(ctx context.Context, userID uuid.UUID) (Quota, error) {
+// Quota reports the user's portrait allowance for today (WIB).
+func (s *Service) Quota(ctx context.Context, userID uuid.UUID) (quota.Usage, error) {
 	limit, err := s.Store.DailyLimit(ctx, userID)
 	if err != nil {
-		return Quota{}, fmt.Errorf("portrait: quota: %w", err)
+		return quota.Usage{}, fmt.Errorf("portrait: quota: %w", err)
 	}
-	start, next := startOfDay(s.now())
+	start, next := quota.Day(s.now())
 	used, err := s.Store.CountSince(ctx, userID, start)
 	if err != nil {
-		return Quota{}, fmt.Errorf("portrait: quota: %w", err)
+		return quota.Usage{}, fmt.Errorf("portrait: quota: %w", err)
 	}
-	return Quota{Limit: limit, Used: used, Remaining: max(limit-used, 0), ResetsAt: next}, nil
+	return quota.NewUsage(limit, used, next), nil
 }
 
 // Gallery lists public characters with their newest portrait.

@@ -36,11 +36,6 @@ const (
 	msgGaveUp   = "Gagal membuat gambar setelah beberapa percobaan. Kuota tidak terpotong; silakan coba lagi."
 )
 
-// wib is Indonesia's western time zone; quotas reset at local midnight.
-// Indonesia has no daylight saving, so a fixed zone is exact and avoids
-// shipping tzdata in the static image.
-var wib = time.FixedZone("WIB", 7*60*60)
-
 // Request is what the user submits.
 type Request struct {
 	Style       string // key of prompt.Styles
@@ -97,14 +92,6 @@ type Subject struct {
 	BackgroundVisual string
 }
 
-// Quota is a user's daily generation allowance.
-type Quota struct {
-	Limit     int
-	Used      int
-	Remaining int
-	ResetsAt  time.Time
-}
-
 // GalleryItem is a public character with its newest portrait.
 type GalleryItem struct {
 	PortraitID    uuid.UUID
@@ -114,11 +101,4 @@ type GalleryItem struct {
 	Class         string
 	Style         string
 	CreatedAt     time.Time
-}
-
-// startOfDay returns local midnight (WIB) of t and the next midnight.
-func startOfDay(t time.Time) (time.Time, time.Time) {
-	y, m, d := t.In(wib).Date()
-	start := time.Date(y, m, d, 0, 0, 0, 0, wib)
-	return start, start.AddDate(0, 0, 1)
 }

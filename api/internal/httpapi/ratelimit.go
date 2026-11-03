@@ -25,6 +25,8 @@ var policies = map[string]limit{
 	"auth": {Every: 6 * time.Second, Burst: 10},
 	// generate portrait: di samping kuota harian, maks 1 request per 10 detik.
 	"generate": {Every: 10 * time.Second, Burst: 2},
+	// generate lore: teks lebih murah, maks 1 request per 5 detik.
+	"lore": {Every: 5 * time.Second, Burst: 3},
 }
 
 // globalPerIP protects every route from a single noisy client.

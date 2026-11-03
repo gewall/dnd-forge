@@ -55,9 +55,12 @@ type Config struct {
 
 	// EncryptionKey (base64, 32 byte) encrypts AI provider API keys at rest.
 	EncryptionKey string `env:"ENCRYPTION_KEY,required,notEmpty"`
-	// OpenAIBaseURL is overridable for tests and compatible gateways.
-	OpenAIBaseURL string `env:"OPENAI_BASE_URL" envDefault:"https://api.openai.com/v1"`
-	// PortraitWorkers bounds concurrent image generations (RAM on the VPS).
+	// OpenAIBaseURL and DeepSeekBaseURL are overridable for tests and
+	// compatible gateways.
+	OpenAIBaseURL   string `env:"OPENAI_BASE_URL" envDefault:"https://api.openai.com/v1"`
+	DeepSeekBaseURL string `env:"DEEPSEEK_BASE_URL" envDefault:"https://api.deepseek.com"`
+	// PortraitWorkers bounds concurrent background generations (portraits
+	// and lore share one queue) to protect the VPS's RAM.
 	PortraitWorkers int `env:"PORTRAIT_WORKERS" envDefault:"1"`
 	// AIFakeProvider registers the free, offline fake provider outside
 	// development, for end-to-end checks without a vendor key.

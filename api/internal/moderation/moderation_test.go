@@ -53,6 +53,20 @@ func TestClean(t *testing.T) {
 	}
 }
 
+func TestCleanUpTo(t *testing.T) {
+	svc := NewService(&fakeStore{words: []string{"gore"}})
+	ctx := context.Background()
+	if got, err := svc.CleanUpTo(ctx, strings.Repeat("a", 500), 500); err != nil || len(got) != 500 {
+		t.Errorf("500 runes within a 500 limit: %d, %v", len(got), err)
+	}
+	if _, err := svc.CleanUpTo(ctx, strings.Repeat("a", 501), 500); !errors.Is(err, ErrTooLong) {
+		t.Errorf("501 runes err = %v, want ErrTooLong", err)
+	}
+	if _, err := svc.CleanUpTo(ctx, "kisah penuh gore", 500); !errors.Is(err, ErrBanned) {
+		t.Errorf("banned word err = %v", err)
+	}
+}
+
 func TestAddNormalizes(t *testing.T) {
 	svc := NewService(&fakeStore{})
 	w, err := svc.Add(context.Background(), "  Kata  KASAR ")

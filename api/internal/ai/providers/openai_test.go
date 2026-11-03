@@ -48,6 +48,7 @@ func TestOpenAIErrors(t *testing.T) {
 		{"bad key", 401, `{"error":{"message":"Incorrect API key"}}`, ai.ErrBadKey},
 		{"moderation", 400, `{"error":{"message":"blocked","code":"moderation_blocked"}}`, ai.ErrRejected},
 		{"content policy", 400, `{"error":{"message":"rejected by safety system","code":"content_policy_violation"}}`, ai.ErrRejected},
+		{"no quota", 429, `{"error":{"message":"You exceeded your current quota","code":"insufficient_quota"}}`, ai.ErrBilling},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -1,5 +1,5 @@
 -- name: ListCharactersByUser :many
-SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.is_public, c.created_at, c.updated_at,
+SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.backstory, c.is_public, c.created_at, c.updated_at,
        r.id AS race_id, r.slug AS race_slug, r.name AS race_name,
        s.id AS subrace_id, s.slug AS subrace_slug, s.name AS subrace_name,
        k.id AS class_id, k.slug AS class_slug, k.name AS class_name,
@@ -13,7 +13,7 @@ WHERE c.user_id = $1
 ORDER BY c.updated_at DESC;
 
 -- name: CharacterByID :one
-SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.is_public, c.created_at, c.updated_at,
+SELECT c.id, c.user_id, c.name, c.gender, c.appearance, c.backstory, c.is_public, c.created_at, c.updated_at,
        r.id AS race_id, r.slug AS race_slug, r.name AS race_name,
        s.id AS subrace_id, s.slug AS subrace_slug, s.name AS subrace_name,
        k.id AS class_id, k.slug AS class_slug, k.name AS class_name,
@@ -29,14 +29,15 @@ WHERE c.id = $1;
 SELECT count(*) FROM characters WHERE user_id = $1;
 
 -- name: CreateCharacter :one
-INSERT INTO characters (user_id, name, gender, race_id, subrace_id, class_id, background_id, appearance, is_public)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO characters (user_id, name, gender, race_id, subrace_id, class_id, background_id, appearance, backstory, is_public)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING id;
 
 -- name: UpdateCharacter :execrows
+-- A NULL backstory keeps the stored one.
 UPDATE characters SET
   name = $3, gender = $4, race_id = $5, subrace_id = $6, class_id = $7, background_id = $8,
-  appearance = $9, is_public = $10, updated_at = now()
+  appearance = $9, is_public = $10, backstory = coalesce(sqlc.narg(backstory), backstory), updated_at = now()
 WHERE id = $1 AND user_id = $2;
 
 -- name: DeleteCharacter :execrows

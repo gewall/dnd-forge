@@ -21,7 +21,7 @@ func TestPostgresTemplates(t *testing.T) {
 		t.Errorf("Active on empty table err = %v", err)
 	}
 	seeded, err := svc.SeedDefaults(ctx)
-	if err != nil || len(seeded) != 1 || seeded[0] != KindPortrait {
+	if err != nil || len(seeded) != 2 || seeded[0] != KindPortrait || seeded[1] != KindLore {
 		t.Fatalf("SeedDefaults = %v, %v", seeded, err)
 	}
 	if seeded, err := svc.SeedDefaults(ctx); err != nil || len(seeded) != 0 {

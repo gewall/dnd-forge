@@ -28,7 +28,10 @@ const entityTemplate = "prompt_template"
 // Kind is what a template generates. One template of each kind is active.
 type Kind string
 
-const KindPortrait Kind = "portrait"
+const (
+	KindPortrait Kind = "portrait"
+	KindLore     Kind = "lore"
+)
 
 // DefaultTemplate is the starter template from the architecture document.
 const DefaultTemplate = `Fantasy character portrait of a {race} {class} with a {background} background.
@@ -38,6 +41,21 @@ Style: {style}, detailed, dramatic lighting, upper body, no text, no watermark.`
 
 // DefaultNegative lists what the default template asks the model to avoid.
 const DefaultNegative = "text, watermark, signature, extra limbs, deformed hands, blurry"
+
+// DefaultLoreTemplate asks for a character backstory. Each optional detail
+// sits on its own line so Build drops it cleanly when empty.
+const DefaultLoreTemplate = `Write the backstory of a Dungeons & Dragons character for the player who created it.
+Name: {name}. Race: {race}. Class: {class}. Background: {background}.
+Subrace: {subrace}.
+Gender: {gender}.
+Appearance: {appearance}.
+The player's wishes: {userPrompt}.
+Tone: {tone}. Length: {length}.
+Write in {language}. Use flowing prose in two to five paragraphs, without a title, headings or lists.
+Keep it consistent with the D&D 5e setting, leave room for future adventures, and do not invent game rules or statistics.`
+
+// DefaultLoreNegative lists what the default lore template asks to avoid.
+const DefaultLoreNegative = "explicit sexual content, real people, existing copyrighted characters"
 
 // Template is one immutable version of a named template.
 type Template struct {
@@ -137,6 +155,7 @@ func (s *Service) Delete(ctx context.Context, actor, id uuid.UUID) error {
 // defaults are the starter templates, one per kind.
 var defaults = []Input{
 	{Kind: KindPortrait, Name: "default", Template: DefaultTemplate, NegativePrompt: DefaultNegative},
+	{Kind: KindLore, Name: "default", Template: DefaultLoreTemplate, NegativePrompt: DefaultLoreNegative},
 }
 
 // SeedDefaults creates and activates the starter template of every kind

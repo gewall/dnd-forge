@@ -58,6 +58,22 @@ func TestPostgresCharacters(t *testing.T) {
 		t.Errorf("Update = %+v, %v", updated, err)
 	}
 
+	// A sent backstory replaces the stored one; an omitted one keeps it.
+	story := "  Lia tumbuh di perpustakaan.  "
+	draft.Backstory = &story
+	if updated, err := svc.Update(ctx, owner.ID, c.ID, draft); err != nil || updated.Backstory != "Lia tumbuh di perpustakaan." {
+		t.Errorf("Update with backstory = %q, %v", updated.Backstory, err)
+	}
+	draft.Backstory = nil
+	if updated, err := svc.Update(ctx, owner.ID, c.ID, draft); err != nil || updated.Backstory != "Lia tumbuh di perpustakaan." {
+		t.Errorf("Update without backstory = %q, %v; want it kept", updated.Backstory, err)
+	}
+	empty := ""
+	draft.Backstory = &empty
+	if updated, err := svc.Update(ctx, owner.ID, c.ID, draft); err != nil || updated.Backstory != "" {
+		t.Errorf("Update with empty backstory = %q, %v; want it cleared", updated.Backstory, err)
+	}
+
 	list, err := svc.List(ctx, owner.ID)
 	if err != nil || len(list) != 1 || list[0].Name != "Lia Manusia" {
 		t.Errorf("List = %+v, %v", list, err)

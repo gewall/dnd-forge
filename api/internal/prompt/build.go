@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Vars are the values a template can reference as {name}.
+// Vars are the values a portrait template can reference as {name}.
 type Vars struct {
 	Race             string
 	Class            string
@@ -35,11 +35,44 @@ func (v Vars) values() map[string]string {
 	}
 }
 
+// LoreVars are the values a lore template can reference as {name}.
+type LoreVars struct {
+	Name       string
+	Race       string
+	Subrace    string
+	Class      string
+	Background string
+	Gender     string
+	Appearance string
+	UserPrompt string
+	Tone       string // English description of the mood
+	Length     string // English target length, e.g. "about 300-400 words"
+	Language   string // English name of the output language
+}
+
+func (v LoreVars) values() map[string]string {
+	return map[string]string{
+		"name":       v.Name,
+		"race":       v.Race,
+		"subrace":    v.Subrace,
+		"class":      v.Class,
+		"background": v.Background,
+		"gender":     v.Gender,
+		"appearance": v.Appearance,
+		"userPrompt": v.UserPrompt,
+		"tone":       v.Tone,
+		"length":     v.Length,
+		"language":   v.Language,
+	}
+}
+
 // fields returns the placeholder names templates of kind k may use.
 func fields(k Kind) (map[string]string, bool) {
 	switch k {
 	case KindPortrait:
 		return (Vars{}).values(), true
+	case KindLore:
+		return (LoreVars{}).values(), true
 	}
 	return nil, false
 }
@@ -71,11 +104,15 @@ var (
 	spaces        = regexp.MustCompile(`[ \t]+`)
 )
 
-// Build fills tpl with v. A line whose placeholders are all empty is
-// dropped, and punctuation left behind by empty values is tidied, so the
-// template's optional parts disappear cleanly.
-func Build(tpl string, v Vars) string {
-	vals := v.values()
+// Build fills a portrait template with v. A line whose placeholders are
+// all empty is dropped, and punctuation left behind by empty values is
+// tidied, so the template's optional parts disappear cleanly.
+func Build(tpl string, v Vars) string { return build(tpl, v.values()) }
+
+// BuildLore fills a lore template with v, like Build.
+func BuildLore(tpl string, v LoreVars) string { return build(tpl, v.values()) }
+
+func build(tpl string, vals map[string]string) string {
 	var out []string
 	for _, line := range strings.Split(tpl, "\n") {
 		matches := placeholderRE.FindAllStringSubmatch(line, -1)

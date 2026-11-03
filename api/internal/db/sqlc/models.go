@@ -228,6 +228,25 @@ type Character struct {
 	IsPublic      bool
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	Backstory     string
+}
+
+type CharacterLore struct {
+	ID           uuid.UUID
+	CharacterID  *uuid.UUID
+	UserID       uuid.UUID
+	ProviderID   uuid.UUID
+	Model        string
+	UserPrompt   string
+	FinalPrompt  string
+	Tone         string
+	Length       string
+	Language     string
+	Status       ImageStatus
+	Content      *string
+	ErrorMessage *string
+	CreatedAt    time.Time
+	CompletedAt  *time.Time
 }
 
 type Class struct {

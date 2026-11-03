@@ -18,7 +18,7 @@ const MaxPromptRunes = 300
 
 var (
 	ErrBanned       = apperr.New(apperr.Invalid, "prompt mengandung kata yang tidak diizinkan; ubah prompt kamu")
-	ErrTooLong      = apperr.New(apperr.Invalid, "prompt tambahan maksimal 300 karakter")
+	ErrTooLong      = apperr.New(apperr.Invalid, "prompt terlalu panjang")
 	ErrInvalidWord  = apperr.New(apperr.Invalid, "kata terlarang harus 2–60 karakter")
 	ErrWordNotFound = apperr.New(apperr.NotFound, "kata tidak ada di daftar")
 )
@@ -55,11 +55,17 @@ func Sanitize(s string) string {
 	return strings.TrimSpace(spaces.ReplaceAllString(s, " "))
 }
 
-// Clean sanitises a user prompt and checks it against the banned words.
-// The returned text is what goes into the {userPrompt} slot.
+// Clean sanitises a user prompt of at most MaxPromptRunes and checks it
+// against the banned words. The returned text is what goes into the
+// {userPrompt} slot.
 func (s *Service) Clean(ctx context.Context, prompt string) (string, error) {
+	return s.CleanUpTo(ctx, prompt, MaxPromptRunes)
+}
+
+// CleanUpTo is Clean with a different length limit.
+func (s *Service) CleanUpTo(ctx context.Context, prompt string, maxRunes int) (string, error) {
 	prompt = Sanitize(prompt)
-	if utf8.RuneCountInString(prompt) > MaxPromptRunes {
+	if utf8.RuneCountInString(prompt) > maxRunes {
 		return "", ErrTooLong
 	}
 	if prompt == "" {

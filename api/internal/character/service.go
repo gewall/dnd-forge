@@ -159,6 +159,10 @@ func normalize(d Draft) Draft {
 	d.Name = strings.TrimSpace(d.Name)
 	d.Gender = strings.TrimSpace(d.Gender)
 	d.Appearance = strings.TrimSpace(d.Appearance)
+	if d.Backstory != nil {
+		b := strings.TrimSpace(*d.Backstory)
+		d.Backstory = &b
+	}
 	return d
 }
 

@@ -48,9 +48,9 @@ func (h *Handler) Register(api huma.API) {
 }
 
 type TemplateRequest struct {
-	Kind           Kind   `json:"kind" enum:"portrait"`
+	Kind           Kind   `json:"kind" enum:"portrait,lore"`
 	Name           string `json:"name" minLength:"1" maxLength:"60"`
-	Template       string `json:"template" minLength:"1" maxLength:"2000" doc:"Placeholder: {race} {class} {background} {gender} {appearance} {userPrompt} {style} {raceVisual} {classVisual} {backgroundVisual}"`
+	Template       string `json:"template" minLength:"1" maxLength:"4000" doc:"Placeholder per jenis: lihat GET /v1/portrait-styles (portrait) dan GET /v1/lore-options (lore)"`
 	NegativePrompt string `json:"negativePrompt,omitempty" maxLength:"500"`
 }
 

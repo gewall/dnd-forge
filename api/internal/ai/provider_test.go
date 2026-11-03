@@ -15,6 +15,14 @@ func (imageVendor) Generate(context.Context, GenerateInput) (GenerateOutput, err
 	return GenerateOutput{}, nil
 }
 
+type textVendor struct{}
+
+func (textVendor) Type() ProviderType                           { return DeepSeek }
+func (textVendor) TestConnection(context.Context, string) error { return nil }
+func (textVendor) Complete(context.Context, TextInput) (string, error) {
+	return "", nil
+}
+
 // bareVendor implements no capability.
 type bareVendor struct{}
 
@@ -22,13 +30,22 @@ func (bareVendor) Type() ProviderType                           { return Google 
 func (bareVendor) TestConnection(context.Context, string) error { return nil }
 
 func TestRegistry(t *testing.T) {
-	r := NewRegistry(imageVendor{OpenAI}, bareVendor{}, imageVendor{Fake})
+	r := NewRegistry(imageVendor{OpenAI}, bareVendor{}, imageVendor{Fake}, textVendor{})
 
 	if !r.Supports(OpenAI, Image) || r.Supports(OpenAI, Text) || r.Supports(Google, Image) || r.Supports(Stability, Image) {
 		t.Error("Supports does not follow the implemented interfaces")
 	}
 	if _, err := r.Image(OpenAI); err != nil {
 		t.Errorf("Image(openai) err = %v", err)
+	}
+	if !r.Supports(DeepSeek, Text) || r.Supports(DeepSeek, Image) {
+		t.Error("text vendor capabilities")
+	}
+	if _, err := r.Text(DeepSeek); err != nil {
+		t.Errorf("Text(deepseek) err = %v", err)
+	}
+	if _, err := r.Text(OpenAI); !errors.Is(err, ErrUnsupported) {
+		t.Errorf("Text(openai) err = %v, want ErrUnsupported", err)
 	}
 	if _, err := r.Image(Google); !errors.Is(err, ErrUnsupported) {
 		t.Errorf("Image(google) err = %v, want ErrUnsupported", err)
@@ -38,6 +55,7 @@ func TestRegistry(t *testing.T) {
 	}
 
 	want := []TypeInfo{
+		{Type: DeepSeek, Capabilities: []Capability{Text}},
 		{Type: Fake, Capabilities: []Capability{Image}},
 		{Type: Google},
 		{Type: OpenAI, Capabilities: []Capability{Image}},

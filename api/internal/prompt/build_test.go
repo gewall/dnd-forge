@@ -1,6 +1,9 @@
 package prompt
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 const docTemplate = `Fantasy character portrait of a {race} {class} with a {background} background.
 {raceVisual}. {classVisual}. {appearance}.
@@ -49,5 +52,29 @@ func TestUnknownPlaceholders(t *testing.T) {
 	}
 	if bad := unknownPlaceholders(KindPortrait, "{race} {weapon} {Class}"); len(bad) != 2 {
 		t.Errorf("unknown = %v, want {weapon} and {Class}", bad)
+	}
+}
+
+func TestBuildLore(t *testing.T) {
+	if bad := unknownPlaceholders(KindLore, DefaultLoreTemplate); len(bad) != 0 {
+		t.Errorf("default lore template has unknown placeholders %v", bad)
+	}
+	if bad := unknownPlaceholders(KindLore, "{style}"); len(bad) != 1 {
+		t.Errorf("portrait placeholder in a lore template: unknown = %v", bad)
+	}
+
+	got := BuildLore(DefaultLoreTemplate, LoreVars{
+		Name: "Lia", Race: "Elf", Class: "Wizard", Background: "Sage",
+		Tone: "dark and grim", Length: "about 300-400 words", Language: "Indonesian",
+	})
+	for _, line := range []string{"Subrace:", "Gender:", "Appearance:", "wishes"} {
+		if strings.Contains(got, line) {
+			t.Errorf("empty %q line kept:\n%s", line, got)
+		}
+	}
+	if !strings.Contains(got, "Name: Lia. Race: Elf. Class: Wizard. Background: Sage.") ||
+		!strings.Contains(got, "Tone: dark and grim. Length: about 300-400 words.") ||
+		!strings.Contains(got, "Write in Indonesian.") {
+		t.Errorf("BuildLore =\n%s", got)
 	}
 }

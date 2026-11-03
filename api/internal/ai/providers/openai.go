@@ -2,12 +2,10 @@
 package providers
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -17,17 +15,13 @@ import (
 
 // OpenAI generates images with the OpenAI Images API.
 type OpenAI struct {
-	baseURL string
-	client  *http.Client
+	api apiClient
 }
 
 // NewOpenAI returns an OpenAI provider talking to baseURL
 // (https://api.openai.com/v1 in production).
 func NewOpenAI(baseURL string) *OpenAI {
-	return &OpenAI{
-		baseURL: strings.TrimRight(baseURL, "/"),
-		client:  &http.Client{Timeout: 150 * time.Second},
-	}
+	return &OpenAI{api: newAPIClient("openai", baseURL, 150*time.Second)}
 }
 
 func (o *OpenAI) Type() ai.ProviderType { return ai.OpenAI }
@@ -44,14 +38,6 @@ type openAIImageResponse struct {
 	Data []struct {
 		B64JSON string `json:"b64_json"`
 	} `json:"data"`
-}
-
-type openAIError struct {
-	Error struct {
-		Message string `json:"message"`
-		Code    string `json:"code"`
-		Type    string `json:"type"`
-	} `json:"error"`
 }
 
 // maxPromptChars stays under the smallest prompt limit of the image models.
@@ -72,8 +58,8 @@ func (o *OpenAI) Generate(ctx context.Context, in ai.GenerateInput) (ai.Generate
 	}
 
 	var out openAIImageResponse
-	if err := o.do(ctx, http.MethodPost, "/images/generations", in.APIKey, req, &out); err != nil {
-		return ai.GenerateOutput{}, err
+	if err := o.api.do(ctx, http.MethodPost, "/images/generations", in.APIKey, req, &out); err != nil {
+		return ai.GenerateOutput{}, openAIError(err)
 	}
 	if len(out.Data) == 0 || out.Data[0].B64JSON == "" {
 		return ai.GenerateOutput{}, fmt.Errorf("openai: response has no image")
@@ -87,56 +73,24 @@ func (o *OpenAI) Generate(ctx context.Context, in ai.GenerateInput) (ai.Generate
 
 // TestConnection checks the key by listing models, which costs nothing.
 func (o *OpenAI) TestConnection(ctx context.Context, apiKey string) error {
-	return o.do(ctx, http.MethodGet, "/models", apiKey, nil, nil)
+	return openAIError(o.api.do(ctx, http.MethodGet, "/models", apiKey, nil, nil))
 }
 
-func (o *OpenAI) do(ctx context.Context, method, path, apiKey string, body, out any) error {
-	var rd io.Reader
-	if body != nil {
-		b, err := json.Marshal(body)
-		if err != nil {
-			return fmt.Errorf("openai: encode: %w", err)
-		}
-		rd = bytes.NewReader(b)
+// openAIError maps vendor failures to the ai errors callers act on.
+func openAIError(err error) error {
+	e, ok := errors.AsType[*apiError](err)
+	if !ok {
+		return err
 	}
-	req, err := http.NewRequestWithContext(ctx, method, o.baseURL+path, rd)
-	if err != nil {
-		return fmt.Errorf("openai: %w", err)
+	switch {
+	case e.Status == http.StatusUnauthorized || e.Status == http.StatusForbidden:
+		return fmt.Errorf("%w: %w", ai.ErrBadKey, e)
+	case e.Code == "moderation_blocked" || e.Code == "content_policy_violation" || strings.Contains(e.Message, "safety system"):
+		return fmt.Errorf("%w: %w", ai.ErrRejected, e)
+	case e.Code == "insufficient_quota" || e.Code == "billing_hard_limit_reached":
+		return fmt.Errorf("%w: %w", ai.ErrBilling, e)
 	}
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	resp, err := o.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("openai: %w", err)
-	}
-	defer resp.Body.Close()
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, 64<<20))
-	if err != nil {
-		return fmt.Errorf("openai: read: %w", err)
-	}
-
-	if resp.StatusCode >= 300 {
-		var e openAIError
-		_ = json.Unmarshal(raw, &e)
-		switch {
-		case resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden:
-			return fmt.Errorf("%w: %s", ai.ErrBadKey, e.Error.Message)
-		case e.Error.Code == "moderation_blocked" || e.Error.Code == "content_policy_violation" ||
-			strings.Contains(e.Error.Message, "safety system"):
-			return fmt.Errorf("%w: %s", ai.ErrRejected, e.Error.Message)
-		}
-		return fmt.Errorf("openai: status %d: %s", resp.StatusCode, e.Error.Message)
-	}
-	if out == nil {
-		return nil
-	}
-	if err := json.Unmarshal(raw, out); err != nil {
-		return fmt.Errorf("openai: decode: %w", err)
-	}
-	return nil
+	return e
 }
 
 // openAISize maps an aspect ratio to a size the model accepts.

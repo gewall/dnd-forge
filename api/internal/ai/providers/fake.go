@@ -13,9 +13,10 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/ai"
 )
 
-// Fake draws a gradient whose colours derive from the prompt. It is for
-// development and tests: no network, no cost. Prompts containing
-// "#reject" are rejected, to exercise the moderation path.
+// Fake draws a gradient whose colours derive from the prompt and writes a
+// fixed story. It is for development and tests: no network, no cost.
+// Prompts containing "#reject" are rejected, to exercise the moderation
+// path.
 type Fake struct {
 	Delay time.Duration
 }
@@ -58,6 +59,20 @@ func (f Fake) Generate(ctx context.Context, in ai.GenerateInput) (ai.GenerateOut
 		return ai.GenerateOutput{}, err
 	}
 	return ai.GenerateOutput{Data: buf.Bytes(), MIMEType: "image/png"}, nil
+}
+
+// Complete returns a short fixed story that quotes the prompt's first line.
+func (f Fake) Complete(ctx context.Context, in ai.TextInput) (string, error) {
+	if strings.Contains(in.Prompt, "#reject") {
+		return "", ai.ErrRejected
+	}
+	select {
+	case <-time.After(f.Delay):
+	case <-ctx.Done():
+		return "", ctx.Err()
+	}
+	first, _, _ := strings.Cut(strings.TrimSpace(in.Prompt), "\n")
+	return "Lore palsu dari provider fake.\n\nPermintaan: " + first, nil
 }
 
 func (Fake) TestConnection(context.Context, string) error { return nil }

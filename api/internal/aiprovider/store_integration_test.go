@@ -22,15 +22,15 @@ func TestPostgresProviders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	svc := NewService(NewPostgresStore(pool), sealer, ai.NewRegistry(providers.Fake{}))
+	svc := NewService(NewPostgresStore(pool), sealer, ai.NewRegistry(providers.Fake{}, providers.NewOpenAI("http://openai.invalid")))
 
 	if _, err := svc.Active(ctx, ai.Image); !errors.Is(err, ErrNoImageProvider) {
 		t.Errorf("Active(image) on empty table err = %v", err)
 	}
-	if _, err := svc.Create(ctx, uuid.Nil, Input{Type: ai.Fake, Capability: ai.Text, Label: "x", DefaultModel: "m", APIKey: "sk-12345678"}); !errors.Is(err, ai.ErrUnsupported) {
-		t.Errorf("fake as text err = %v, want ErrUnsupported", err)
+	if _, err := svc.Create(ctx, uuid.Nil, Input{Type: ai.OpenAI, Capability: ai.Text, Label: "x", DefaultModel: "m", APIKey: "sk-12345678"}); !errors.Is(err, ai.ErrUnsupported) {
+		t.Errorf("openai as text err = %v, want ErrUnsupported", err)
 	}
-	if _, err := svc.Create(ctx, uuid.Nil, Input{Type: ai.OpenAI, Capability: ai.Image, Label: "x", DefaultModel: "m", APIKey: "sk-12345678"}); !errors.Is(err, ai.ErrUnknownProvider) {
+	if _, err := svc.Create(ctx, uuid.Nil, Input{Type: ai.Stability, Capability: ai.Image, Label: "x", DefaultModel: "m", APIKey: "sk-12345678"}); !errors.Is(err, ai.ErrUnknownProvider) {
 		t.Errorf("unregistered type err = %v, want ErrUnknownProvider", err)
 	}
 

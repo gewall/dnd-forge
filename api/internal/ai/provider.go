@@ -19,6 +19,7 @@ const (
 	Google    ProviderType = "google"
 	Stability ProviderType = "stability"
 	Replicate ProviderType = "replicate"
+	DeepSeek  ProviderType = "deepseek"
 	Fake      ProviderType = "fake" // development only
 )
 
@@ -44,6 +45,8 @@ var (
 	ErrRejected = apperr.New(apperr.Invalid, "prompt ditolak oleh moderasi provider AI")
 	// ErrBadKey means the API key is invalid or lacks permission.
 	ErrBadKey = apperr.New(apperr.Invalid, "API key provider AI tidak valid")
+	// ErrBilling means the vendor account has no balance or quota left.
+	ErrBilling = apperr.New(apperr.Unavailable, "saldo atau kuota akun provider AI habis")
 	// ErrUnknownProvider means no implementation is registered for a type.
 	ErrUnknownProvider = apperr.New(apperr.Invalid, "jenis provider AI tidak didukung")
 	// ErrUnsupported means a vendor does not offer a capability.
@@ -70,11 +73,26 @@ type Vendor interface {
 }
 
 // ImageProvider generates images with one vendor. Implementations return
-// ErrRejected and ErrBadKey (possibly wrapped) for non-retryable failures;
-// any other error is treated as transient.
+// ErrRejected, ErrBadKey and ErrBilling (possibly wrapped) for
+// non-retryable failures; any other error is treated as transient.
 type ImageProvider interface {
 	Vendor
 	Generate(ctx context.Context, in GenerateInput) (GenerateOutput, error)
+}
+
+type TextInput struct {
+	System    string // instructions; may be empty
+	Prompt    string
+	Model     string
+	MaxTokens int    // upper bound of the reply; 0 leaves it to the vendor
+	APIKey    string // already decrypted
+}
+
+// TextProvider writes text with one vendor, with the same error contract
+// as ImageProvider.
+type TextProvider interface {
+	Vendor
+	Complete(ctx context.Context, in TextInput) (string, error)
 }
 
 // Registry resolves a vendor implementation by type. A vendor's
@@ -104,13 +122,23 @@ func (r *Registry) Vendor(t ProviderType) (Vendor, error) {
 
 // Image returns the image implementation for t.
 func (r *Registry) Image(t ProviderType) (ImageProvider, error) {
+	return implAs[ImageProvider](r, t, Image)
+}
+
+// Text returns the text implementation for t.
+func (r *Registry) Text(t ProviderType) (TextProvider, error) {
+	return implAs[TextProvider](r, t, Text)
+}
+
+func implAs[P Vendor](r *Registry, t ProviderType, c Capability) (P, error) {
+	var zero P
 	v, err := r.Vendor(t)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
-	p, ok := v.(ImageProvider)
+	p, ok := v.(P)
 	if !ok {
-		return nil, fmt.Errorf("%w: %s/%s", ErrUnsupported, t, Image)
+		return zero, fmt.Errorf("%w: %s/%s", ErrUnsupported, t, c)
 	}
 	return p, nil
 }
@@ -141,6 +169,9 @@ func capabilities(v Vendor) []Capability {
 	var cs []Capability
 	if _, ok := v.(ImageProvider); ok {
 		cs = append(cs, Image)
+	}
+	if _, ok := v.(TextProvider); ok {
+		cs = append(cs, Text)
 	}
 	return cs
 }

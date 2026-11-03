@@ -55,6 +55,7 @@ type CharacterRequest struct {
 	ClassID      uuid.UUID  `json:"classId"`
 	BackgroundID uuid.UUID  `json:"backgroundId"`
 	Appearance   string     `json:"appearance,omitempty" maxLength:"1000" doc:"detail penampilan, dipakai prompt portrait"`
+	Backstory    *string    `json:"backstory,omitempty" maxLength:"10000" doc:"kisah latar; jangan dikirim untuk mempertahankan yang tersimpan (mis. hasil POST /v1/lore/{id}/apply)"`
 	IsPublic     bool       `json:"isPublic,omitempty" doc:"tampil di galeri publik"`
 }
 
@@ -69,6 +70,7 @@ type CharacterDTO struct {
 	Name       string    `json:"name"`
 	Gender     string    `json:"gender"`
 	Appearance string    `json:"appearance"`
+	Backstory  string    `json:"backstory"`
 	IsPublic   bool      `json:"isPublic"`
 	Race       RefDTO    `json:"race"`
 	Subrace    *RefDTO   `json:"subrace"`
@@ -144,7 +146,7 @@ func toOutput(c Character) *characterOutput { return &characterOutput{Body: toDT
 
 func toDTO(c Character) CharacterDTO {
 	d := CharacterDTO{
-		ID: c.ID, Name: c.Name, Gender: c.Gender, Appearance: c.Appearance, IsPublic: c.IsPublic,
+		ID: c.ID, Name: c.Name, Gender: c.Gender, Appearance: c.Appearance, Backstory: c.Backstory, IsPublic: c.IsPublic,
 		Race: RefDTO(c.Race), Class: RefDTO(c.Class), Background: RefDTO(c.Background),
 		CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt,
 	}

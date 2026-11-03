@@ -28,16 +28,18 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/health"
 	"github.com/gewall/dnd-forge/api/internal/httpapi"
 	"github.com/gewall/dnd-forge/api/internal/imaging"
+	"github.com/gewall/dnd-forge/api/internal/lore"
 	"github.com/gewall/dnd-forge/api/internal/media"
 	"github.com/gewall/dnd-forge/api/internal/moderation"
 	"github.com/gewall/dnd-forge/api/internal/portrait"
 	"github.com/gewall/dnd-forge/api/internal/prompt"
+	"github.com/gewall/dnd-forge/api/internal/quota"
 	"github.com/gewall/dnd-forge/api/internal/storage"
 )
 
 const (
 	Title   = "DnD Forge API"
-	Version = "0.4.0"
+	Version = "0.5.0"
 
 	webpQuality = 82
 
@@ -131,7 +133,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 	modSvc := moderation.NewService(moderation.NewPostgresStore(pool))
 
 	// Requests enqueue through an insert-only client, which exists before
-	// the workers that need the portrait service.
+	// the workers that need the portrait and lore services.
 	driver := riverpgxv5.New(pool)
 	inserter, err := river.NewClient(driver, &river.Config{Logger: log})
 	if err != nil {
@@ -147,8 +149,16 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		Objects:   store,
 		Logger:    log,
 	})
+	loreSvc := lore.NewService(lore.Deps{
+		Store:     lore.NewPostgresStore(pool, inserter),
+		Providers: aiSvc,
+		Templates: promptSvc,
+		Moderator: modSvc,
+		Logger:    log,
+	})
 	workers := river.NewWorkers()
 	river.AddWorker(workers, portrait.NewWorker(portraitSvc))
+	river.AddWorker(workers, lore.NewWorker(loreSvc))
 	jobs, err := river.NewClient(driver, &river.Config{
 		Queues:  map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: cfg.PortraitWorkers}},
 		Workers: workers,
@@ -178,6 +188,8 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		prompt.NewHandler(promptSvc),
 		moderation.NewHandler(modSvc),
 		portrait.NewHandler(portraitSvc, urls),
+		lore.NewHandler(loreSvc),
+		quota.NewHandler(portraitSvc, loreSvc),
 	)
 
 	return &App{
@@ -227,7 +239,7 @@ func sealerFor(cfg config.Config) (*crypto.Sealer, error) {
 
 // registryFor lists the AI vendors this deployment can call.
 func registryFor(cfg config.Config) *ai.Registry {
-	vendors := []ai.Vendor{providers.NewOpenAI(cfg.OpenAIBaseURL)}
+	vendors := []ai.Vendor{providers.NewOpenAI(cfg.OpenAIBaseURL), providers.NewDeepSeek(cfg.DeepSeekBaseURL)}
 	if cfg.IsDev() || cfg.AIFakeProvider {
 		vendors = append(vendors, providers.Fake{Delay: fakeDelay})
 	}
@@ -249,6 +261,8 @@ func OpenAPI() ([]byte, error) {
 		prompt.NewHandler(nil),
 		moderation.NewHandler(nil),
 		portrait.NewHandler(nil, nil),
+		lore.NewHandler(nil),
+		quota.NewHandler(nil, nil),
 	)
 	return srv.API.OpenAPI().MarshalJSON()
 }

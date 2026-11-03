@@ -17,6 +17,7 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/aiprovider"
 	"github.com/gewall/dnd-forge/api/internal/imaging"
 	"github.com/gewall/dnd-forge/api/internal/prompt"
+	"github.com/gewall/dnd-forge/api/internal/quota"
 )
 
 // memStore keeps portraits in memory and serves as both Store and TxStore.
@@ -392,16 +393,8 @@ func TestQuota(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := Quota{Limit: 3, Used: 7, Remaining: 0, ResetsAt: time.Date(2026, 10, 29, 17, 0, 0, 0, time.UTC)}
+	want := quota.Usage{Limit: 3, Used: 7, Remaining: 0, ResetsAt: time.Date(2026, 10, 29, 17, 0, 0, 0, time.UTC)}
 	if q.Limit != want.Limit || q.Used != want.Used || q.Remaining != 0 || !q.ResetsAt.Equal(want.ResetsAt) {
 		t.Errorf("Quota = %+v, want %+v", q, want)
-	}
-}
-
-func TestStartOfDay(t *testing.T) {
-	// 17:00 UTC is midnight WIB: the new day has just begun.
-	start, next := startOfDay(time.Date(2026, 10, 29, 17, 0, 0, 0, time.UTC))
-	if !start.Equal(time.Date(2026, 10, 29, 17, 0, 0, 0, time.UTC)) || !next.Equal(start.Add(24*time.Hour)) {
-		t.Errorf("startOfDay = %v, %v", start, next)
 	}
 }

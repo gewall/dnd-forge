@@ -44,7 +44,7 @@ func (h *Handler) Register(api huma.API) {
 }
 
 type ProviderRequest struct {
-	Type         ai.ProviderType `json:"type" enum:"openai,google,stability,replicate,fake"`
+	Type         ai.ProviderType `json:"type" enum:"openai,deepseek,google,stability,replicate,fake"`
 	Capability   ai.Capability   `json:"capability" enum:"image,text" doc:"image untuk portrait, text untuk lore"`
 	Label        string          `json:"label" minLength:"1" maxLength:"60"`
 	DefaultModel string          `json:"defaultModel" minLength:"1" maxLength:"80" example:"gpt-image-1"`
