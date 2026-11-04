@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -61,6 +62,25 @@ async function UserDetail({ params }: Pick<Props, "params">) {
             <Usage title="Portrait hari ini" usage={u.portraitUsage} />
             <Usage title="Lore hari ini" usage={u.loreUsage} />
           </div>
+          <ul className="space-y-1 text-sm">
+            <li>
+              <Link href={`/admin/images?userId=${u.id}`} className="text-primary hover:underline">
+                Lihat portrait user ini
+              </Link>
+            </li>
+            <li>
+              <Link href={`/admin/audit?${new URLSearchParams({ entity: "user", entityId: u.id })}`} className="text-primary hover:underline">
+                Riwayat perubahan akun
+              </Link>
+            </li>
+            {u.role === "ADMIN" && (
+              <li>
+                <Link href={`/admin/audit?actorId=${u.id}`} className="text-primary hover:underline">
+                  Perubahan yang dibuat admin ini
+                </Link>
+              </li>
+            )}
+          </ul>
         </aside>
       </div>
     </>
