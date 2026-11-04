@@ -113,7 +113,8 @@
   --ring: #d4a548;
   --arcane: #8b7fd6;
   --arcane-foreground: #171a23;
-  --chart-1: #d4a548;
+  /* Chart brass sits darker than the UI brass so it stays inside the validated lightness band. */
+  --chart-1: #b98b34;
   --chart-2: #8b7fd6;
   --chart-3: #5fb3a1;
   --chart-4: #e08a5c;
