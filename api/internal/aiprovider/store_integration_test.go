@@ -88,6 +88,12 @@ func TestPostgresProviders(t *testing.T) {
 	if err := svc.Test(ctx, first.ID); err != nil {
 		t.Errorf("Test: %v", err)
 	}
+	if ids, err := svc.Models(ctx, first.ID); err != nil || len(ids) == 0 {
+		t.Errorf("Models = %v, %v", ids, err)
+	}
+	if _, err := svc.Models(ctx, uuid.New()); !errors.Is(err, ErrNotFound) {
+		t.Errorf("Models of unknown provider err = %v", err)
+	}
 
 	updated, err := svc.Update(ctx, uuid.Nil, second.ID, Input{Label: "Dua v2", DefaultModel: "fake-3"})
 	if err != nil || updated.KeyLast4 != "wxyz" || updated.Capability != ai.Image {

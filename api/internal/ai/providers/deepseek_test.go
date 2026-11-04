@@ -90,3 +90,31 @@ func TestDeepSeekTestConnection(t *testing.T) {
 		t.Errorf("bad key err = %v", err)
 	}
 }
+
+func TestModels(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/models" {
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+		if r.Header.Get("Authorization") != "Bearer good" {
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(`{"error":{"message":"bad key"}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"object":"list","data":[{"id":"deepseek-v4-pro"},{"id":""},{"id":"deepseek-v4-flash"}]}`))
+	}))
+	defer srv.Close()
+	ctx := context.Background()
+	for name, l := range map[string]ai.ModelLister{"deepseek": NewDeepSeek(srv.URL), "openai": NewOpenAI(srv.URL)} {
+		ids, err := l.Models(ctx, "good")
+		if err != nil || len(ids) != 2 || ids[0] != "deepseek-v4-flash" {
+			t.Errorf("%s: Models = %v, %v; want sorted, blanks dropped", name, ids, err)
+		}
+		if _, err := l.Models(ctx, "bad"); !errors.Is(err, ai.ErrBadKey) {
+			t.Errorf("%s: bad key err = %v", name, err)
+		}
+	}
+	if ids, err := (Fake{}).Models(ctx, ""); err != nil || len(ids) == 0 {
+		t.Errorf("fake Models = %v, %v", ids, err)
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
@@ -157,6 +158,26 @@ func TestAccountGuard(t *testing.T) {
 				t.Errorf("GET %s = %d %s; want %d containing %q", tt.path, rec.Code, rec.Body, tt.want, tt.body)
 			}
 		})
+	}
+}
+
+func TestSecureHeaders(t *testing.T) {
+	s := newTestServer()
+	huma.Register(s.API, huma.Operation{OperationID: "cached", Method: http.MethodGet, Path: "/cached"},
+		func(context.Context, *struct{}) (*Redirect, error) {
+			return NewRedirect("https://s3.example/x", time.Hour), nil
+		})
+	key := map[string]string{HeaderInternalKey: testKey}
+
+	rec := do(s, http.MethodGet, "/public", key)
+	if rec.Header().Get("Cache-Control") != "no-store" || rec.Header().Get("X-Content-Type-Options") != "nosniff" {
+		t.Errorf("default headers = %v", rec.Header())
+	}
+	if rec := do(s, http.MethodGet, "/nope", nil); rec.Header().Get("Cache-Control") != "no-store" {
+		t.Errorf("rejected request headers = %v", rec.Header())
+	}
+	if rec := do(s, http.MethodGet, "/cached", key); !strings.HasPrefix(rec.Header().Get("Cache-Control"), "public, max-age=") {
+		t.Errorf("redirect Cache-Control = %q, want the operation's own", rec.Header().Get("Cache-Control"))
 	}
 }
 

@@ -88,6 +88,12 @@ type TextInput struct {
 	APIKey    string // already decrypted
 }
 
+// ModelLister is implemented by vendors that can list the models a key may
+// use, so admins can pick one instead of typing its name.
+type ModelLister interface {
+	Models(ctx context.Context, apiKey string) ([]string, error)
+}
+
 // Usage is what a text request consumed, as the vendor bills it. Zero when
 // the vendor does not report it.
 type Usage struct {

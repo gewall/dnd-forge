@@ -14,5 +14,5 @@ WHERE id = $1 AND revoked_at IS NULL;
 UPDATE refresh_tokens SET revoked_at = now()
 WHERE user_id = $1 AND revoked_at IS NULL;
 
--- name: DeleteExpiredRefreshTokens :exec
+-- name: DeleteExpiredRefreshTokens :execrows
 DELETE FROM refresh_tokens WHERE expires_at < now() - interval '7 days';

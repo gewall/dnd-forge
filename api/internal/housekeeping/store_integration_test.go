@@ -40,3 +40,26 @@ func TestReferencedObjectKeys(t *testing.T) {
 		t.Errorf("referenced = %v, want %v", got, want)
 	}
 }
+
+func TestPurgeTokensQuery(t *testing.T) {
+	ctx := context.Background()
+	pool := dbtest.Pool(t, "users")
+	// Only tokens that expired over a week ago go; recently expired ones
+	// stay so a late refresh still gets a clear "session expired".
+	_, err := pool.Exec(ctx, `
+		WITH u AS (INSERT INTO users (email) VALUES ('sleepy@example.com') RETURNING id)
+		INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+		SELECT u.id, h, now() + d FROM u,
+		       (VALUES ('old', interval '-10 days'), ('recent', interval '-1 day'), ('valid', interval '20 days')) AS t(h, d)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := NewService(nil, sqlc.New(pool))
+	if n, err := svc.PurgeTokens(ctx); err != nil || n != 1 {
+		t.Errorf("PurgeTokens = %d, %v; want 1", n, err)
+	}
+	var left int
+	if err := pool.QueryRow(ctx, "SELECT count(*) FROM refresh_tokens").Scan(&left); err != nil || left != 2 {
+		t.Errorf("tokens left = %d, %v", left, err)
+	}
+}

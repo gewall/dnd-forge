@@ -49,6 +49,14 @@ func (r *refs) ReferencedObjectKeys(_ context.Context, keys []string) ([]string,
 	return out, nil
 }
 
+func (r *refs) DeleteExpiredRefreshTokens(context.Context) (int64, error) { return 4, nil }
+
+func TestPurgeTokens(t *testing.T) {
+	if n, err := NewService(&bucket{}, &refs{}).PurgeTokens(context.Background()); n != 4 || err != nil {
+		t.Errorf("PurgeTokens = %d, %v", n, err)
+	}
+}
+
 func keys(objs []storage.Object) []string {
 	out := make([]string, len(objs))
 	for i, o := range objs {

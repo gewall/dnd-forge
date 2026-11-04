@@ -163,13 +163,16 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		Moderator: modSvc,
 		Logger:    log,
 	})
+	housekeepingSvc := housekeeping.NewService(store, sqlc.New(pool))
 	workers := river.NewWorkers()
 	river.AddWorker(workers, portrait.NewWorker(portraitSvc))
 	river.AddWorker(workers, lore.NewWorker(loreSvc))
+	river.AddWorker(workers, housekeeping.NewPurgeWorker(housekeepingSvc, log))
 	jobs, err := river.NewClient(driver, &river.Config{
-		Queues:  map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: cfg.PortraitWorkers}},
-		Workers: workers,
-		Logger:  log,
+		Queues:       map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: cfg.PortraitWorkers}},
+		Workers:      workers,
+		PeriodicJobs: []*river.PeriodicJob{housekeeping.PeriodicPurge()},
+		Logger:       log,
 	})
 	if err != nil {
 		pool.Close()
@@ -217,7 +220,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		Auth:         authSvc,
 		GameData:     gameSvc,
 		Guide:        guideSvc,
-		Housekeeping: housekeeping.NewService(store, sqlc.New(pool)),
+		Housekeeping: housekeepingSvc,
 		Server:       srv,
 		jobs:         jobs,
 	}, nil

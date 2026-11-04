@@ -189,6 +189,27 @@ func (s *Service) Test(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+// Models lists the models the stored key of provider id may use.
+func (s *Service) Models(ctx context.Context, id uuid.UUID) ([]string, error) {
+	p, key, err := s.credentials(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	impl, err := s.registry.Vendor(p.Type)
+	if err != nil {
+		return nil, err
+	}
+	lister, ok := impl.(ai.ModelLister)
+	if !ok {
+		return nil, fmt.Errorf("%w: %s cannot list models", ai.ErrUnsupported, p.Type)
+	}
+	ids, err := lister.Models(ctx, key)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrConnection, err)
+	}
+	return ids, nil
+}
+
 // Active returns the provider and model new requests of capability c
 // should use. A provider whose type this build does not register (e.g. the
 // fake one once AI_FAKE_PROVIDER is off) counts as none, so requests fail

@@ -71,6 +71,12 @@ func (o *OpenAI) Generate(ctx context.Context, in ai.GenerateInput) (ai.Generate
 	return ai.GenerateOutput{Data: data, MIMEType: http.DetectContentType(data)}, nil
 }
 
+// Models lists every model the key may use.
+func (o *OpenAI) Models(ctx context.Context, apiKey string) ([]string, error) {
+	ids, err := o.api.models(ctx, apiKey)
+	return ids, openAIError(err)
+}
+
 // TestConnection checks the key by listing models, which costs nothing.
 func (o *OpenAI) TestConnection(ctx context.Context, apiKey string) error {
 	return openAIError(o.api.do(ctx, http.MethodGet, "/models", apiKey, nil, nil))

@@ -81,6 +81,7 @@ func New(cfg Config) *Server {
 	}
 
 	s.Router.Use(
+		secureHeaders,
 		middleware.RequestID,
 		s.identifyClient,
 		s.accessLog,
@@ -102,6 +103,18 @@ func New(cfg Config) *Server {
 	s.API = humachi.New(s.Router, hc)
 	s.API.UseMiddleware(s.authenticate, s.rateLimit)
 	return s
+}
+
+// secureHeaders sets defaults for every response: no MIME sniffing, and no
+// caching, since responses carry tokens and private data. Operations that
+// may be cached (media redirects) override Cache-Control.
+func secureHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
 }
 
 // isPublicPath reports whether path may be called without the internal key.

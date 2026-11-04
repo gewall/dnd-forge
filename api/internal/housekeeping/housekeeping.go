@@ -1,5 +1,6 @@
-// Package housekeeping removes data nothing points to any more, such as
-// storage objects left behind by deleted rows or interrupted uploads.
+// Package housekeeping removes data nobody needs any more: storage objects
+// no row points to (on demand, through tools orphans) and expired refresh
+// tokens (daily, as a River periodic job).
 package housekeeping
 
 import (
@@ -26,21 +27,34 @@ type Objects interface {
 	Delete(ctx context.Context, key string) error
 }
 
-// References reports which of keys a database row still points to.
-type References interface {
+// Store answers the database side of housekeeping.
+type Store interface {
+	// ReferencedObjectKeys reports which of keys a row still points to.
 	ReferencedObjectKeys(ctx context.Context, keys []string) ([]string, error)
+	// DeleteExpiredRefreshTokens removes tokens expired over a week ago and
+	// returns how many.
+	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
 }
 
-// Service finds and removes orphaned objects.
+// Service finds and removes data nothing needs.
 type Service struct {
 	objects Objects
-	refs    References
+	store   Store
 	now     func() time.Time
 }
 
 // NewService returns a Service.
-func NewService(objects Objects, refs References) *Service {
-	return &Service{objects: objects, refs: refs, now: time.Now}
+func NewService(objects Objects, store Store) *Service {
+	return &Service{objects: objects, store: store, now: time.Now}
+}
+
+// PurgeTokens deletes long-expired refresh tokens.
+func (s *Service) PurgeTokens(ctx context.Context) (int64, error) {
+	n, err := s.store.DeleteExpiredRefreshTokens(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("housekeeping: purge tokens: %w", err)
+	}
+	return n, nil
 }
 
 // Orphans lists objects under Prefixes that are older than minAge and that
@@ -67,7 +81,7 @@ func (s *Service) Orphans(ctx context.Context, minAge time.Duration) ([]storage.
 		for i, o := range batch {
 			keys[i] = o.Key
 		}
-		used, err := s.refs.ReferencedObjectKeys(ctx, keys)
+		used, err := s.store.ReferencedObjectKeys(ctx, keys)
 		if err != nil {
 			return nil, fmt.Errorf("housekeeping: references: %w", err)
 		}

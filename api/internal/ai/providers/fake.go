@@ -81,6 +81,11 @@ func (f Fake) Complete(ctx context.Context, in ai.TextInput) (ai.Completion, err
 
 func (Fake) TestConnection(context.Context, string) error { return nil }
 
+// Models lists the fake models.
+func (Fake) Models(context.Context, string) ([]string, error) {
+	return []string{"fake-1", "fake-text"}, nil
+}
+
 // channel wraps n into a colour channel value.
 func channel(n int) uint8 {
 	return uint8(n % 256) //nolint:gosec // G115: n is never negative, so % 256 keeps it in range

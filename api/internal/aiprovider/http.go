@@ -39,6 +39,7 @@ func (h *Handler) Register(api huma.API) {
 	huma.Register(api, op("adminUpdateAIProvider", http.MethodPut, "/v1/admin/ai/providers/{id}", "Ubah label/model; isi apiKey hanya untuk mengganti key", 0, bad, missing), h.update)
 	huma.Register(api, op("adminDeleteAIProvider", http.MethodDelete, "/v1/admin/ai/providers/{id}", "Hapus provider yang tidak aktif dan belum dipakai", http.StatusNoContent, missing, conflict), h.delete)
 	huma.Register(api, op("adminTestAIProvider", http.MethodPost, "/v1/admin/ai/providers/{id}/test", "Uji koneksi dengan key tersimpan", http.StatusNoContent, bad, missing), h.test)
+	huma.Register(api, op("adminAIProviderModels", http.MethodGet, "/v1/admin/ai/providers/{id}/models", "Model yang bisa dipakai key tersimpan (untuk pilihan defaultModel)", 0, bad, missing), h.models)
 	huma.Register(api, op("adminActivateAIProvider", http.MethodPost, "/v1/admin/ai/providers/{id}/activate", "Jadikan provider aktif untuk kemampuannya (image/text)", http.StatusNoContent, missing), h.activate)
 	huma.Register(api, op("adminAIProviderTypes", http.MethodGet, "/v1/admin/ai/provider-types", "Jenis provider yang didukung build ini dan kemampuannya", 0), h.types)
 }
@@ -134,6 +135,19 @@ func (h *Handler) activate(ctx context.Context, in *idInput) (*struct{}, error) 
 
 func (h *Handler) test(ctx context.Context, in *idInput) (*struct{}, error) {
 	return nil, httpapi.NoContent(ctx, h.svc.Test(ctx, in.ID))
+}
+
+type ModelList struct {
+	Items []string `json:"items"`
+}
+
+type modelsOutput struct{ Body ModelList }
+
+func (h *Handler) models(ctx context.Context, in *idInput) (*modelsOutput, error) {
+	ids, err := h.svc.Models(ctx, in.ID)
+	return httpapi.Respond(ctx, ids, err, func(ids []string) *modelsOutput {
+		return &modelsOutput{Body: ModelList{Items: ids}}
+	})
 }
 
 func (h *Handler) types(context.Context, *struct{}) (*typesOutput, error) {

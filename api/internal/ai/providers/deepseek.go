@@ -92,6 +92,12 @@ func (d *DeepSeek) Complete(ctx context.Context, in ai.TextInput) (ai.Completion
 	}}, nil
 }
 
+// Models lists every model the key may use.
+func (d *DeepSeek) Models(ctx context.Context, apiKey string) ([]string, error) {
+	ids, err := d.api.models(ctx, apiKey)
+	return ids, deepSeekError(err)
+}
+
 // TestConnection checks the key by listing models, which costs nothing.
 func (d *DeepSeek) TestConnection(ctx context.Context, apiKey string) error {
 	return deepSeekError(d.api.do(ctx, http.MethodGet, "/models", apiKey, nil, nil))

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 )
@@ -88,4 +89,24 @@ func (c apiClient) do(ctx context.Context, method, path, apiKey string, body, ou
 		return fmt.Errorf("%s: decode: %w", c.name, err)
 	}
 	return nil
+}
+
+// models lists the model ids of an OpenAI-style GET /models, sorted.
+func (c apiClient) models(ctx context.Context, apiKey string) ([]string, error) {
+	var out struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := c.do(ctx, http.MethodGet, "/models", apiKey, nil, &out); err != nil {
+		return nil, err
+	}
+	ids := make([]string, 0, len(out.Data))
+	for _, m := range out.Data {
+		if m.ID != "" {
+			ids = append(ids, m.ID)
+		}
+	}
+	slices.Sort(ids)
+	return ids, nil
 }
