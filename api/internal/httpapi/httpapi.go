@@ -7,6 +7,7 @@
 package httpapi
 
 import (
+	"context"
 	"crypto/subtle"
 	"errors"
 	"log/slog"
@@ -29,12 +30,21 @@ type TokenVerifier interface {
 	Verify(token string) (identity.Principal, error)
 }
 
+// AccountGuard re-checks a verified caller against the stored account, so
+// blocking a user or changing their role applies before the access token
+// expires. It returns the principal with the current role, or a domain error
+// (Forbidden when blocked, Unauthorized when the account is gone).
+type AccountGuard interface {
+	Current(ctx context.Context, p identity.Principal) (identity.Principal, error)
+}
+
 // Config configures the router.
 type Config struct {
 	Title          string
 	Version        string
 	InternalAPIKey string
 	Verifier       TokenVerifier // may be nil when only generating OpenAPI
+	Accounts       AccountGuard  // nil skips the account check
 	Logger         *slog.Logger
 	// PublicDocs serves /docs and /openapi.json without the internal key;
 	// enable it only in development.
@@ -48,6 +58,7 @@ type Server struct {
 
 	internalKey []byte
 	verifier    TokenVerifier
+	accounts    AccountGuard
 	log         *slog.Logger
 	publicDocs  bool
 	limits      *limiters
@@ -63,6 +74,7 @@ func New(cfg Config) *Server {
 		Router:      chi.NewRouter(),
 		internalKey: []byte(cfg.InternalAPIKey),
 		verifier:    cfg.Verifier,
+		accounts:    cfg.Accounts,
 		log:         log,
 		publicDocs:  cfg.PublicDocs,
 		limits:      newLimiters(),

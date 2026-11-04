@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 
+	"github.com/gewall/dnd-forge/api/internal/apperr"
 	"github.com/gewall/dnd-forge/api/internal/identity"
 )
 
@@ -59,10 +61,7 @@ func withAccess(op huma.Operation, a access) huma.Operation {
 	setMeta(&op, metaAccess, a)
 	if a != accessOptional {
 		op.Security = []map[string][]string{{schemeInternal: {}, schemeBearer: {}}}
-		op.Errors = appendUnique(op.Errors, http.StatusUnauthorized)
-	}
-	if a == accessAdmin {
-		op.Errors = appendUnique(op.Errors, http.StatusForbidden)
+		op.Errors = appendUnique(op.Errors, http.StatusUnauthorized, http.StatusForbidden) // 403: blocked or not admin
 	}
 	return op
 }
@@ -74,13 +73,13 @@ func setMeta(op *huma.Operation, key string, v any) {
 	op.Metadata[key] = v
 }
 
-func appendUnique(codes []int, code int) []int {
-	for _, c := range codes {
-		if c == code {
-			return codes
+func appendUnique(codes []int, add ...int) []int {
+	for _, code := range add {
+		if !slices.Contains(codes, code) {
+			codes = append(codes, code)
 		}
 	}
-	return append(codes, code)
+	return codes
 }
 
 // authenticate resolves the bearer token and enforces the access level the
@@ -110,6 +109,18 @@ func (s *Server) authenticate(ctx huma.Context, next func(huma.Context)) {
 		s.writeErr(ctx, http.StatusUnauthorized, "token tidak valid atau kedaluwarsa")
 		return
 	}
+	if s.accounts != nil {
+		current, err := s.accounts.Current(ctx.Context(), p)
+		if err != nil {
+			if need == accessOptional && apperr.KindOf(err) != apperr.Internal {
+				next(ctx) // a blocked or deleted caller browses anonymously
+				return
+			}
+			s.writeError(ctx, err)
+			return
+		}
+		p = current
+	}
 	if need == accessAdmin && !p.IsAdmin() {
 		s.writeErr(ctx, http.StatusForbidden, "khusus admin")
 		return
@@ -133,6 +144,15 @@ func bearerToken(header string) (string, bool) {
 		return "", false
 	}
 	return strings.TrimSpace(token), true
+}
+
+// writeError writes a domain error with the status Error maps it to.
+func (s *Server) writeError(ctx huma.Context, err error) {
+	status, msg := http.StatusInternalServerError, msgInternal
+	if se, ok := errors.AsType[huma.StatusError](Error(ctx.Context(), err)); ok {
+		status, msg = se.GetStatus(), se.Error()
+	}
+	s.writeErr(ctx, status, msg)
 }
 
 func (s *Server) writeErr(ctx huma.Context, status int, msg string) {

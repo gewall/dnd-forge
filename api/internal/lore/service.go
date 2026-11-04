@@ -20,7 +20,7 @@ import (
 // Store reads and updates drafts outside of a transaction.
 type Store interface {
 	Subject(ctx context.Context, characterID uuid.UUID) (Subject, error) // ErrCharacterNotFound
-	DailyLimit(ctx context.Context) (int, error)
+	DailyLimit(ctx context.Context, userID uuid.UUID) (int, error)       // the user's own limit or the default
 	CountSince(ctx context.Context, userID uuid.UUID, since time.Time) (int, error)
 	LoreByID(ctx context.Context, id uuid.UUID) (Lore, error) // ErrNotFound
 	LoresOf(ctx context.Context, characterID, userID uuid.UUID) ([]Lore, error)
@@ -119,7 +119,7 @@ func (s *Service) Request(ctx context.Context, userID, characterID uuid.UUID, r 
 	if err != nil {
 		return Lore{}, fmt.Errorf("lore: %w", err)
 	}
-	limit, err := s.Store.DailyLimit(ctx)
+	limit, err := s.Store.DailyLimit(ctx, userID)
 	if err != nil {
 		return Lore{}, fmt.Errorf("lore: %w", err)
 	}
@@ -257,7 +257,7 @@ func (s *Service) Apply(ctx context.Context, userID, id uuid.UUID) error {
 
 // Quota reports the user's lore allowance for today (WIB).
 func (s *Service) Quota(ctx context.Context, userID uuid.UUID) (quota.Usage, error) {
-	limit, err := s.Store.DailyLimit(ctx)
+	limit, err := s.Store.DailyLimit(ctx, userID)
 	if err != nil {
 		return quota.Usage{}, fmt.Errorf("lore: quota: %w", err)
 	}

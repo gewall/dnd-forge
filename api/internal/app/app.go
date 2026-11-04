@@ -15,6 +15,7 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 
+	"github.com/gewall/dnd-forge/api/internal/account"
 	"github.com/gewall/dnd-forge/api/internal/ai"
 	"github.com/gewall/dnd-forge/api/internal/ai/providers"
 	"github.com/gewall/dnd-forge/api/internal/aiprovider"
@@ -39,7 +40,7 @@ import (
 
 const (
 	Title   = "DnD Forge API"
-	Version = "0.5.0"
+	Version = "0.6.0"
 
 	webpQuality = 82
 
@@ -169,11 +170,18 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		return nil, fmt.Errorf("app: river: %w", err)
 	}
 
+	accountSvc := account.NewService(account.Deps{
+		Store:    account.NewPostgresStore(pool),
+		Portrait: portraitSvc,
+		Lore:     loreSvc,
+	})
+
 	srv := httpapi.New(httpapi.Config{
 		Title:          Title,
 		Version:        Version,
 		InternalAPIKey: cfg.InternalAPIKey,
 		Verifier:       tokens,
+		Accounts:       accountSvc,
 		Logger:         log,
 		PublicDocs:     cfg.IsDev(),
 	})
@@ -190,6 +198,8 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		portrait.NewHandler(portraitSvc, urls),
 		lore.NewHandler(loreSvc),
 		quota.NewHandler(portraitSvc, loreSvc),
+		quota.NewSettingsHandler(quota.NewSettings(quota.NewPostgresSettings(pool))),
+		account.NewHandler(accountSvc),
 	)
 
 	return &App{
@@ -263,6 +273,8 @@ func OpenAPI() ([]byte, error) {
 		portrait.NewHandler(nil, nil),
 		lore.NewHandler(nil),
 		quota.NewHandler(nil, nil),
+		quota.NewSettingsHandler(nil),
+		account.NewHandler(nil),
 	)
 	return srv.API.OpenAPI().MarshalJSON()
 }

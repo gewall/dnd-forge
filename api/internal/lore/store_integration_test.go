@@ -70,8 +70,14 @@ func TestPostgresLore(t *testing.T) {
 	if _, err := store.Subject(ctx, uuid.New()); !errors.Is(err, ErrCharacterNotFound) {
 		t.Errorf("unknown character err = %v", err)
 	}
-	if limit, err := store.DailyLimit(ctx); err != nil || limit != 10 {
+	if limit, err := store.DailyLimit(ctx, owner.ID); err != nil || limit != 10 {
 		t.Errorf("DailyLimit = %d, %v; want 10 from app_settings", limit, err)
+	}
+	if _, err := pool.Exec(ctx, "UPDATE users SET daily_lore_quota = 3 WHERE id = $1", stranger.ID); err != nil {
+		t.Fatal(err)
+	}
+	if limit, err := store.DailyLimit(ctx, stranger.ID); err != nil || limit != 3 {
+		t.Errorf("per-user DailyLimit = %d, %v; want 3", limit, err)
 	}
 
 	create := func() Lore {

@@ -14,7 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, password_hash, google_sub, name, role)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at
+RETURNING id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at, daily_lore_quota
 `
 
 type CreateUserParams struct {
@@ -45,6 +45,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.IsBanned,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DailyLoreQuota,
 	)
 	return i, err
 }
@@ -52,7 +53,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 const linkGoogleSub = `-- name: LinkGoogleSub :one
 UPDATE users SET google_sub = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at
+RETURNING id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at, daily_lore_quota
 `
 
 type LinkGoogleSubParams struct {
@@ -74,6 +75,7 @@ func (q *Queries) LinkGoogleSub(ctx context.Context, arg LinkGoogleSubParams) (U
 		&i.IsBanned,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DailyLoreQuota,
 	)
 	return i, err
 }
@@ -96,7 +98,7 @@ func (q *Queries) SetUserPassword(ctx context.Context, arg SetUserPasswordParams
 const setUserRole = `-- name: SetUserRole :one
 UPDATE users SET role = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at
+RETURNING id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at, daily_lore_quota
 `
 
 type SetUserRoleParams struct {
@@ -118,12 +120,13 @@ func (q *Queries) SetUserRole(ctx context.Context, arg SetUserRoleParams) (User,
 		&i.IsBanned,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DailyLoreQuota,
 	)
 	return i, err
 }
 
 const userByEmail = `-- name: UserByEmail :one
-SELECT id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at FROM users WHERE email = $1
+SELECT id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at, daily_lore_quota FROM users WHERE email = $1
 `
 
 func (q *Queries) UserByEmail(ctx context.Context, email string) (User, error) {
@@ -140,12 +143,13 @@ func (q *Queries) UserByEmail(ctx context.Context, email string) (User, error) {
 		&i.IsBanned,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DailyLoreQuota,
 	)
 	return i, err
 }
 
 const userByGoogleSub = `-- name: UserByGoogleSub :one
-SELECT id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at FROM users WHERE google_sub = $1
+SELECT id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at, daily_lore_quota FROM users WHERE google_sub = $1
 `
 
 func (q *Queries) UserByGoogleSub(ctx context.Context, googleSub *string) (User, error) {
@@ -162,12 +166,13 @@ func (q *Queries) UserByGoogleSub(ctx context.Context, googleSub *string) (User,
 		&i.IsBanned,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DailyLoreQuota,
 	)
 	return i, err
 }
 
 const userByID = `-- name: UserByID :one
-SELECT id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at FROM users WHERE id = $1
+SELECT id, email, password_hash, google_sub, name, role, daily_quota, is_banned, created_at, updated_at, daily_lore_quota FROM users WHERE id = $1
 `
 
 func (q *Queries) UserByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -184,6 +189,7 @@ func (q *Queries) UserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.IsBanned,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DailyLoreQuota,
 	)
 	return i, err
 }

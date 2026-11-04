@@ -40,7 +40,9 @@ Satu package per fitur, dependensi satu arah `http.go → service.go → interfa
 - Semua adapter konkret dirangkai di `internal/app` (composition root), tanpa global state.
 
 Aturan akses operasi: `httpapi.Authenticated`, `httpapi.AdminOnly`, `httpapi.OptionalAuth`,
-`httpapi.RateLimited(op, "auth")`.
+`httpapi.RateLimited(op, "auth")`. Setiap request yang membawa token dicek ulang ke status akun
+(`account.Service.Current`, cache 30 detik): akun diblokir → 403, role dari DB menimpa klaim token, jadi blokir dan
+ganti role dari admin berlaku tanpa menunggu access token kedaluwarsa.
 
 ## Gambar
 

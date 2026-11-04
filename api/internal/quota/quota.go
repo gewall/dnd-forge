@@ -38,24 +38,49 @@ func NewUsage(limit, used int, resetsAt time.Time) Usage {
 	return Usage{Limit: limit, Used: used, Remaining: max(limit-used, 0), ResetsAt: resetsAt}
 }
 
+// Kind names one daily quota.
+type Kind string
+
+const (
+	Portrait Kind = "portrait"
+	Lore     Kind = "lore"
+)
+
+// MaxLimit bounds every daily limit an admin can set.
+const MaxLimit = 1000
+
+// defaults maps each quota to its app_settings key and the limit used when
+// that setting is missing or malformed.
+var defaults = map[Kind]struct {
+	key      string
+	fallback int
+}{
+	Portrait: {"default_daily_quota", 5},
+	Lore:     {"default_daily_lore_quota", 10},
+}
+
 // SettingReader reads an app_settings value (JSON).
 type SettingReader interface {
 	SettingValue(ctx context.Context, key string) ([]byte, error)
 }
 
-// DefaultLimit reads the integer setting key, or fallback when it is
-// missing or malformed.
-func DefaultLimit(ctx context.Context, r SettingReader, key string, fallback int) (int, error) {
-	raw, err := r.SettingValue(ctx, key)
+// DefaultLimit returns the admin-set default daily limit of k, or the
+// built-in fallback when the setting is missing or malformed.
+func DefaultLimit(ctx context.Context, r SettingReader, k Kind) (int, error) {
+	d, ok := defaults[k]
+	if !ok {
+		return 0, fmt.Errorf("quota: unknown kind %q", k)
+	}
+	raw, err := r.SettingValue(ctx, d.key)
 	if db.IsNoRows(err) {
-		return fallback, nil
+		return d.fallback, nil
 	}
 	if err != nil {
-		return 0, fmt.Errorf("setting %s: %w", key, err)
+		return 0, fmt.Errorf("setting %s: %w", d.key, err)
 	}
 	var n int
-	if err := json.Unmarshal(raw, &n); err != nil {
-		return fallback, nil //nolint:nilerr // a malformed setting falls back to the default
+	if err := json.Unmarshal(raw, &n); err != nil || n < 0 {
+		return d.fallback, nil //nolint:nilerr // a malformed setting falls back to the default
 	}
 	return n, nil
 }

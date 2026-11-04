@@ -44,3 +44,6 @@ WHERE id = $1 AND status = 'PENDING';
 -- name: SetCharacterBackstory :execrows
 UPDATE characters SET backstory = $3, updated_at = now()
 WHERE id = $1 AND user_id = $2;
+
+-- name: UserDailyLoreQuota :one
+SELECT daily_lore_quota FROM users WHERE id = $1;

@@ -16,9 +16,6 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/quota"
 )
 
-// fallbackDailyQuota applies if the default_daily_quota setting is missing.
-const fallbackDailyQuota = 5
-
 // JobInserter inserts River jobs inside a caller's transaction.
 type JobInserter interface {
 	InsertTx(ctx context.Context, tx pgx.Tx, args river.JobArgs, opts *river.InsertOpts) (*rivertype.JobInsertResult, error)
@@ -66,7 +63,7 @@ func (s *PostgresStore) DailyLimit(ctx context.Context, userID uuid.UUID) (int, 
 	if own != nil {
 		return int(*own), nil
 	}
-	return quota.DefaultLimit(ctx, s.q, "default_daily_quota", fallbackDailyQuota)
+	return quota.DefaultLimit(ctx, s.q, quota.Portrait)
 }
 
 func (s *PostgresStore) CountSince(ctx context.Context, userID uuid.UUID, since time.Time) (int, error) {

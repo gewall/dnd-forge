@@ -42,8 +42,10 @@ type whoami struct {
 	}
 }
 
-func newTestServer() *Server {
-	s := New(Config{Title: "test", Version: "0", InternalAPIKey: testKey, Verifier: fakeVerifier{}})
+func newTestServer() *Server { return newGuardedServer(nil) }
+
+func newGuardedServer(g AccountGuard) *Server {
+	s := New(Config{Title: "test", Version: "0", InternalAPIKey: testKey, Verifier: fakeVerifier{}, Accounts: g})
 	h := func(ctx context.Context, _ *struct{}) (*whoami, error) {
 		out := &whoami{}
 		if p, ok := identity.FromContext(ctx); ok {
@@ -107,6 +109,52 @@ func TestAccessRules(t *testing.T) {
 			rec := do(s, http.MethodGet, tt.path, tt.headers)
 			if rec.Code != tt.want {
 				t.Errorf("GET %s = %d, want %d; body %s", tt.path, rec.Code, tt.want, rec.Body)
+			}
+		})
+	}
+}
+
+// guard answers with a fixed result, as the account service would.
+type guard struct {
+	role identity.Role
+	err  error
+}
+
+func (g guard) Current(_ context.Context, p identity.Principal) (identity.Principal, error) {
+	if g.err != nil {
+		return identity.Principal{}, g.err
+	}
+	p.Role = g.role
+	return p, nil
+}
+
+func TestAccountGuard(t *testing.T) {
+	with := func(token string) map[string]string {
+		return map[string]string{HeaderInternalKey: testKey, "Authorization": "Bearer " + token}
+	}
+	banned := apperr.New(apperr.Forbidden, "akun diblokir")
+	gone := apperr.New(apperr.Unauthorized, "akun tidak ditemukan")
+	tests := []struct {
+		name  string
+		g     guard
+		path  string
+		token string
+		want  int
+		body  string
+	}{
+		{"blocked user", guard{err: banned}, "/user", "user", http.StatusForbidden, "akun diblokir"},
+		{"deleted user", guard{err: gone}, "/user", "user", http.StatusUnauthorized, "akun tidak ditemukan"},
+		{"database down", guard{err: errors.New("db down")}, "/user", "user", http.StatusInternalServerError, msgInternal},
+		{"promoted since token was issued", guard{role: identity.RoleAdmin}, "/admin", "user", http.StatusOK, ""},
+		{"demoted since token was issued", guard{role: identity.RoleUser}, "/admin", "admin", http.StatusForbidden, "khusus admin"},
+		{"blocked user browses anonymously", guard{err: banned}, "/optional", "user", http.StatusOK, `"userId":""`},
+		{"public skips the check", guard{err: banned}, "/public", "user", http.StatusOK, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := do(newGuardedServer(tt.g), http.MethodGet, tt.path, with(tt.token))
+			if rec.Code != tt.want || !strings.Contains(rec.Body.String(), tt.body) {
+				t.Errorf("GET %s = %d %s; want %d containing %q", tt.path, rec.Code, rec.Body, tt.want, tt.body)
 			}
 		})
 	}

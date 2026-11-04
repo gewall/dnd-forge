@@ -89,7 +89,7 @@ func (q *Queries) CountLoresSince(ctx context.Context, arg CountLoresSinceParams
 const createLore = `-- name: CreateLore :one
 INSERT INTO character_lores (character_id, user_id, provider_id, model, user_prompt, final_prompt, tone, length, language)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, character_id, user_id, provider_id, model, user_prompt, final_prompt, tone, length, language, status, content, error_message, created_at, completed_at
+RETURNING id, character_id, user_id, provider_id, model, user_prompt, final_prompt, tone, length, language, status, content, error_message, created_at, completed_at, prompt_tokens, completion_tokens
 `
 
 type CreateLoreParams struct {
@@ -133,6 +133,8 @@ func (q *Queries) CreateLore(ctx context.Context, arg CreateLoreParams) (Charact
 		&i.ErrorMessage,
 		&i.CreatedAt,
 		&i.CompletedAt,
+		&i.PromptTokens,
+		&i.CompletionTokens,
 	)
 	return i, err
 }
@@ -164,7 +166,7 @@ func (q *Queries) LockUserLores(ctx context.Context, userID string) error {
 }
 
 const loreByID = `-- name: LoreByID :one
-SELECT id, character_id, user_id, provider_id, model, user_prompt, final_prompt, tone, length, language, status, content, error_message, created_at, completed_at FROM character_lores WHERE id = $1
+SELECT id, character_id, user_id, provider_id, model, user_prompt, final_prompt, tone, length, language, status, content, error_message, created_at, completed_at, prompt_tokens, completion_tokens FROM character_lores WHERE id = $1
 `
 
 func (q *Queries) LoreByID(ctx context.Context, id uuid.UUID) (CharacterLore, error) {
@@ -186,12 +188,14 @@ func (q *Queries) LoreByID(ctx context.Context, id uuid.UUID) (CharacterLore, er
 		&i.ErrorMessage,
 		&i.CreatedAt,
 		&i.CompletedAt,
+		&i.PromptTokens,
+		&i.CompletionTokens,
 	)
 	return i, err
 }
 
 const loresByCharacter = `-- name: LoresByCharacter :many
-SELECT id, character_id, user_id, provider_id, model, user_prompt, final_prompt, tone, length, language, status, content, error_message, created_at, completed_at FROM character_lores
+SELECT id, character_id, user_id, provider_id, model, user_prompt, final_prompt, tone, length, language, status, content, error_message, created_at, completed_at, prompt_tokens, completion_tokens FROM character_lores
 WHERE character_id = $1 AND user_id = $2
 ORDER BY created_at DESC
 LIMIT 50
@@ -227,6 +231,8 @@ func (q *Queries) LoresByCharacter(ctx context.Context, arg LoresByCharacterPara
 			&i.ErrorMessage,
 			&i.CreatedAt,
 			&i.CompletedAt,
+			&i.PromptTokens,
+			&i.CompletionTokens,
 		); err != nil {
 			return nil, err
 		}
@@ -255,4 +261,15 @@ func (q *Queries) SetCharacterBackstory(ctx context.Context, arg SetCharacterBac
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const userDailyLoreQuota = `-- name: UserDailyLoreQuota :one
+SELECT daily_lore_quota FROM users WHERE id = $1
+`
+
+func (q *Queries) UserDailyLoreQuota(ctx context.Context, id uuid.UUID) (*int32, error) {
+	row := q.db.QueryRow(ctx, userDailyLoreQuota, id)
+	var daily_lore_quota *int32
+	err := row.Scan(&daily_lore_quota)
+	return daily_lore_quota, err
 }

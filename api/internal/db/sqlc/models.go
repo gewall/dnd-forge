@@ -232,21 +232,23 @@ type Character struct {
 }
 
 type CharacterLore struct {
-	ID           uuid.UUID
-	CharacterID  *uuid.UUID
-	UserID       uuid.UUID
-	ProviderID   uuid.UUID
-	Model        string
-	UserPrompt   string
-	FinalPrompt  string
-	Tone         string
-	Length       string
-	Language     string
-	Status       ImageStatus
-	Content      *string
-	ErrorMessage *string
-	CreatedAt    time.Time
-	CompletedAt  *time.Time
+	ID               uuid.UUID
+	CharacterID      *uuid.UUID
+	UserID           uuid.UUID
+	ProviderID       uuid.UUID
+	Model            string
+	UserPrompt       string
+	FinalPrompt      string
+	Tone             string
+	Length           string
+	Language         string
+	Status           ImageStatus
+	Content          *string
+	ErrorMessage     *string
+	CreatedAt        time.Time
+	CompletedAt      *time.Time
+	PromptTokens     *int32
+	CompletionTokens *int32
 }
 
 type Class struct {
@@ -351,14 +353,15 @@ type Subrace struct {
 }
 
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	PasswordHash *string
-	GoogleSub    *string
-	Name         string
-	Role         UserRole
-	DailyQuota   *int32
-	IsBanned     bool
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID             uuid.UUID
+	Email          string
+	PasswordHash   *string
+	GoogleSub      *string
+	Name           string
+	Role           UserRole
+	DailyQuota     *int32
+	IsBanned       bool
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DailyLoreQuota *int32
 }

@@ -42,7 +42,7 @@ func (m *memStore) Subject(_ context.Context, id uuid.UUID) (Subject, error) {
 	return s, nil
 }
 
-func (m *memStore) DailyLimit(context.Context) (int, error) { return m.limit, nil }
+func (m *memStore) DailyLimit(context.Context, uuid.UUID) (int, error) { return m.limit, nil }
 
 func (m *memStore) CountSince(_ context.Context, _ uuid.UUID, since time.Time) (int, error) {
 	m.since = since

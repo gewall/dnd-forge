@@ -43,15 +43,30 @@ func (s settings) SettingValue(_ context.Context, key string) ([]byte, error) {
 
 func TestDefaultLimit(t *testing.T) {
 	ctx := context.Background()
-	s := settings{"set": "12", "bad": `"lots"`}
-	for key, want := range map[string]int{"set": 12, "bad": 4, "missing": 4} {
-		if got, err := DefaultLimit(ctx, s, key, 4); err != nil || got != want {
-			t.Errorf("DefaultLimit(%s) = %d, %v; want %d", key, got, err, want)
+	tests := []struct {
+		name string
+		s    settings
+		k    Kind
+		want int
+	}{
+		{"set", settings{"default_daily_quota": "12"}, Portrait, 12},
+		{"zero is allowed", settings{"default_daily_lore_quota": "0"}, Lore, 0},
+		{"malformed", settings{"default_daily_quota": `"lots"`}, Portrait, 5},
+		{"negative", settings{"default_daily_quota": "-3"}, Portrait, 5},
+		{"missing portrait", settings{}, Portrait, 5},
+		{"missing lore", settings{}, Lore, 10},
+	}
+	for _, tt := range tests {
+		if got, err := DefaultLimit(ctx, tt.s, tt.k); err != nil || got != tt.want {
+			t.Errorf("%s: DefaultLimit = %d, %v; want %d", tt.name, got, err, tt.want)
 		}
 	}
 	boom := errors.New("down")
-	if _, err := DefaultLimit(ctx, failing{boom}, "set", 4); !errors.Is(err, boom) {
+	if _, err := DefaultLimit(ctx, failing{boom}, Portrait); !errors.Is(err, boom) {
 		t.Errorf("read error = %v", err)
+	}
+	if _, err := DefaultLimit(ctx, settings{}, "coins"); err == nil {
+		t.Error("unknown kind accepted")
 	}
 }
 
