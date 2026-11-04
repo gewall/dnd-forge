@@ -54,17 +54,25 @@ func (q *Queries) CharacterForLore(ctx context.Context, id uuid.UUID) (Character
 
 const completeLore = `-- name: CompleteLore :exec
 UPDATE character_lores
-SET status = 'SUCCEEDED', content = $2, error_message = NULL, completed_at = now()
+SET status = 'SUCCEEDED', content = $2, prompt_tokens = $3, completion_tokens = $4,
+    error_message = NULL, completed_at = now()
 WHERE id = $1 AND status = 'PENDING'
 `
 
 type CompleteLoreParams struct {
-	ID      uuid.UUID
-	Content *string
+	ID               uuid.UUID
+	Content          *string
+	PromptTokens     *int32
+	CompletionTokens *int32
 }
 
 func (q *Queries) CompleteLore(ctx context.Context, arg CompleteLoreParams) error {
-	_, err := q.db.Exec(ctx, completeLore, arg.ID, arg.Content)
+	_, err := q.db.Exec(ctx, completeLore,
+		arg.ID,
+		arg.Content,
+		arg.PromptTokens,
+		arg.CompletionTokens,
+	)
 	return err
 }
 

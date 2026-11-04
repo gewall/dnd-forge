@@ -115,11 +115,11 @@ func TestPostgresLore(t *testing.T) {
 		t.Errorf("CountSince = %d, %v; FAILED must not count", n, err)
 	}
 
-	if err := store.Complete(ctx, first.ID, "Ravi bernyanyi."); err != nil {
+	if err := store.Complete(ctx, first.ID, "Ravi bernyanyi.", ai.Usage{PromptTokens: 300, CompletionTokens: 120}); err != nil {
 		t.Fatal(err)
 	}
 	// Complete and Fail only touch PENDING drafts.
-	if err := store.Complete(ctx, second.ID, "late"); err != nil {
+	if err := store.Complete(ctx, second.ID, "late", ai.Usage{}); err != nil {
 		t.Fatal(err)
 	}
 	if err := store.Fail(ctx, first.ID, "late"); err != nil {
@@ -128,6 +128,11 @@ func TestPostgresLore(t *testing.T) {
 	done, err := store.LoreByID(ctx, first.ID)
 	if err != nil || done.Status != StatusSucceeded || done.Content != "Ravi bernyanyi." || done.ErrorMessage != "" || done.CompletedAt == nil {
 		t.Errorf("completed draft = %+v, %v", done, err)
+	}
+	var promptTokens, completionTokens *int32
+	if err := pool.QueryRow(ctx, "SELECT prompt_tokens, completion_tokens FROM character_lores WHERE id = $1", first.ID).
+		Scan(&promptTokens, &completionTokens); err != nil || promptTokens == nil || *promptTokens != 300 || *completionTokens != 120 {
+		t.Errorf("stored usage = %v/%v, %v", promptTokens, completionTokens, err)
 	}
 	if failed, _ := store.LoreByID(ctx, second.ID); failed.Status != StatusFailed || failed.Content != "" {
 		t.Errorf("failed draft = %+v", failed)

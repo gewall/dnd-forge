@@ -24,7 +24,7 @@ type Store interface {
 	CountSince(ctx context.Context, userID uuid.UUID, since time.Time) (int, error)
 	LoreByID(ctx context.Context, id uuid.UUID) (Lore, error) // ErrNotFound
 	LoresOf(ctx context.Context, characterID, userID uuid.UUID) ([]Lore, error)
-	Complete(ctx context.Context, id uuid.UUID, content string) error
+	Complete(ctx context.Context, id uuid.UUID, content string, usage ai.Usage) error
 	Fail(ctx context.Context, id uuid.UUID, message string) error
 	SetBackstory(ctx context.Context, characterID, userID uuid.UUID, text string) error // ErrCharacterNotFound
 	InTx(ctx context.Context, fn func(TxStore) error) error
@@ -204,13 +204,13 @@ func (s *Service) write(ctx context.Context, l Lore) error {
 	if err != nil {
 		return err
 	}
-	text, err := impl.Complete(ctx, ai.TextInput{
+	out, err := impl.Complete(ctx, ai.TextInput{
 		System: systemPrompt, Prompt: l.FinalPrompt, Model: l.Model, MaxTokens: Lengths[l.Length].maxTokens, APIKey: key,
 	})
 	if err != nil {
 		return err
 	}
-	return s.Store.Complete(ctx, l.ID, truncate(strings.TrimSpace(text), maxContentRunes))
+	return s.Store.Complete(ctx, l.ID, truncate(strings.TrimSpace(out.Text), maxContentRunes), out.Usage)
 }
 
 func (s *Service) fail(ctx context.Context, id uuid.UUID, msg string, cause error) error {

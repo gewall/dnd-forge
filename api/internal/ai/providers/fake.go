@@ -61,18 +61,22 @@ func (f Fake) Generate(ctx context.Context, in ai.GenerateInput) (ai.GenerateOut
 	return ai.GenerateOutput{Data: buf.Bytes(), MIMEType: "image/png"}, nil
 }
 
-// Complete returns a short fixed story that quotes the prompt's first line.
-func (f Fake) Complete(ctx context.Context, in ai.TextInput) (string, error) {
+// Complete returns a short fixed story that quotes the prompt's first line,
+// with usage estimated at four characters per token.
+func (f Fake) Complete(ctx context.Context, in ai.TextInput) (ai.Completion, error) {
 	if strings.Contains(in.Prompt, "#reject") {
-		return "", ai.ErrRejected
+		return ai.Completion{}, ai.ErrRejected
 	}
 	select {
 	case <-time.After(f.Delay):
 	case <-ctx.Done():
-		return "", ctx.Err()
+		return ai.Completion{}, ctx.Err()
 	}
 	first, _, _ := strings.Cut(strings.TrimSpace(in.Prompt), "\n")
-	return "Lore palsu dari provider fake.\n\nPermintaan: " + first, nil
+	text := "Lore palsu dari provider fake.\n\nPermintaan: " + first
+	return ai.Completion{Text: text, Usage: ai.Usage{
+		PromptTokens: len(in.System+in.Prompt)/4 + 1, CompletionTokens: len(text)/4 + 1,
+	}}, nil
 }
 
 func (Fake) TestConnection(context.Context, string) error { return nil }

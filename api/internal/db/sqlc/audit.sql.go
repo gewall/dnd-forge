@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -33,4 +34,71 @@ func (q *Queries) InsertAuditLog(ctx context.Context, arg InsertAuditLogParams) 
 		arg.Diff,
 	)
 	return err
+}
+
+const listAuditLogs = `-- name: ListAuditLogs :many
+SELECT a.id, a.actor_id, u.email AS actor_email, a.action, a.entity, a.entity_id, a.diff, a.created_at
+FROM audit_logs a
+LEFT JOIN users u ON u.id = a.actor_id
+WHERE ($1::text IS NULL OR a.entity = $1)
+  AND ($2::text IS NULL OR a.entity_id = $2)
+  AND ($3::uuid IS NULL OR a.actor_id = $3)
+  AND ($4::bigint IS NULL OR a.id < $4)
+ORDER BY a.id DESC
+LIMIT $5
+`
+
+type ListAuditLogsParams struct {
+	Entity     *string
+	EntityID   *string
+	ActorID    *uuid.UUID
+	BeforeID   *int64
+	MaxResults int32
+}
+
+type ListAuditLogsRow struct {
+	ID         int64
+	ActorID    *uuid.UUID
+	ActorEmail *string
+	Action     string
+	Entity     string
+	EntityID   string
+	Diff       []byte
+	CreatedAt  time.Time
+}
+
+// Newest first; pass the last item's id as before_id for the next page.
+func (q *Queries) ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]ListAuditLogsRow, error) {
+	rows, err := q.db.Query(ctx, listAuditLogs,
+		arg.Entity,
+		arg.EntityID,
+		arg.ActorID,
+		arg.BeforeID,
+		arg.MaxResults,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAuditLogsRow
+	for rows.Next() {
+		var i ListAuditLogsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ActorID,
+			&i.ActorEmail,
+			&i.Action,
+			&i.Entity,
+			&i.EntityID,
+			&i.Diff,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

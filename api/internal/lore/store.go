@@ -3,6 +3,7 @@ package lore
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,6 +12,7 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 
+	"github.com/gewall/dnd-forge/api/internal/ai"
 	"github.com/gewall/dnd-forge/api/internal/db"
 	"github.com/gewall/dnd-forge/api/internal/db/sqlc"
 	"github.com/gewall/dnd-forge/api/internal/quota"
@@ -92,8 +94,11 @@ func (s *PostgresStore) LoresOf(ctx context.Context, characterID, userID uuid.UU
 	return out, nil
 }
 
-func (s *PostgresStore) Complete(ctx context.Context, id uuid.UUID, content string) error {
-	if err := s.q.CompleteLore(ctx, sqlc.CompleteLoreParams{ID: id, Content: &content}); err != nil {
+func (s *PostgresStore) Complete(ctx context.Context, id uuid.UUID, content string, usage ai.Usage) error {
+	err := s.q.CompleteLore(ctx, sqlc.CompleteLoreParams{
+		ID: id, Content: &content, PromptTokens: tokens(usage.PromptTokens), CompletionTokens: tokens(usage.CompletionTokens),
+	})
+	if err != nil {
 		return fmt.Errorf("complete lore: %w", err)
 	}
 	return nil
@@ -175,4 +180,14 @@ func deref(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// tokens stores a reported token count; zero means the vendor did not
+// report one.
+func tokens(n int) *int32 {
+	if n <= 0 {
+		return nil
+	}
+	v := int32(min(n, math.MaxInt32)) //nolint:gosec // G115: clamped above
+	return &v
 }

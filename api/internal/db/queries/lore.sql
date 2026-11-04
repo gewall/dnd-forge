@@ -33,7 +33,8 @@ LIMIT 50;
 
 -- name: CompleteLore :exec
 UPDATE character_lores
-SET status = 'SUCCEEDED', content = $2, error_message = NULL, completed_at = now()
+SET status = 'SUCCEEDED', content = $2, prompt_tokens = $3, completion_tokens = $4,
+    error_message = NULL, completed_at = now()
 WHERE id = $1 AND status = 'PENDING';
 
 -- name: FailLore :exec

@@ -18,15 +18,15 @@ func TestDeepSeekComplete(t *testing.T) {
 			t.Errorf("unexpected request %s %s auth=%q", r.Method, r.URL.Path, r.Header.Get("Authorization"))
 		}
 		_ = json.NewDecoder(r.Body).Decode(&got)
-		_, _ = w.Write([]byte(`{"choices":[{"message":{"role":"assistant","content":"  Kisah Lia.\n"},"finish_reason":"stop"}]}`))
+		_, _ = w.Write([]byte(`{"choices":[{"message":{"role":"assistant","content":"  Kisah Lia.\n"},"finish_reason":"stop"}],"usage":{"prompt_tokens":120,"completion_tokens":45}}`))
 	}))
 	defer srv.Close()
 
 	text, err := NewDeepSeek(srv.URL+"/").Complete(context.Background(), ai.TextInput{
 		System: "kamu penulis lore", Prompt: "tulis lore", Model: "deepseek-v4-flash", MaxTokens: 900, APIKey: "sk-ds",
 	})
-	if err != nil || text != "Kisah Lia." {
-		t.Fatalf("Complete = %q, %v", text, err)
+	if err != nil || text.Text != "Kisah Lia." || text.Usage != (ai.Usage{PromptTokens: 120, CompletionTokens: 45}) {
+		t.Fatalf("Complete = %+v, %v", text, err)
 	}
 	want := []chatMessage{{Role: "system", Content: "kamu penulis lore"}, {Role: "user", Content: "tulis lore"}}
 	if got.Model != "deepseek-v4-flash" || got.MaxTokens != 900 || got.Stream || got.Thinking.Type != "disabled" || len(got.Messages) != 2 ||

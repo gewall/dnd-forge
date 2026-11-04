@@ -48,6 +48,10 @@ type chatResponse struct {
 		Message      chatMessage `json:"message"`
 		FinishReason string      `json:"finish_reason"`
 	} `json:"choices"`
+	Usage struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+	} `json:"usage"`
 }
 
 // creativeTemperature keeps some variety without derailing: 1.5 (DeepSeek's
@@ -58,7 +62,7 @@ const creativeTemperature = 1.0
 // Complete turns thinking off: V4 models think by default, which spends
 // max_tokens on reasoning and can leave the answer empty (finish_reason
 // "length"); lore needs no reasoning, and temperature only applies without it.
-func (d *DeepSeek) Complete(ctx context.Context, in ai.TextInput) (string, error) {
+func (d *DeepSeek) Complete(ctx context.Context, in ai.TextInput) (ai.Completion, error) {
 	req := chatRequest{
 		Model: in.Model, MaxTokens: in.MaxTokens, Temperature: creativeTemperature,
 		Thinking: chatThinking{Type: "disabled"},
@@ -70,20 +74,22 @@ func (d *DeepSeek) Complete(ctx context.Context, in ai.TextInput) (string, error
 
 	var out chatResponse
 	if err := d.api.do(ctx, http.MethodPost, "/chat/completions", in.APIKey, req, &out); err != nil {
-		return "", deepSeekError(err)
+		return ai.Completion{}, deepSeekError(err)
 	}
 	if len(out.Choices) == 0 {
-		return "", fmt.Errorf("deepseek: response has no choices")
+		return ai.Completion{}, fmt.Errorf("deepseek: response has no choices")
 	}
 	c := out.Choices[0]
 	if c.FinishReason == "content_filter" {
-		return "", fmt.Errorf("%w: finish_reason content_filter", ai.ErrRejected)
+		return ai.Completion{}, fmt.Errorf("%w: finish_reason content_filter", ai.ErrRejected)
 	}
 	text := strings.TrimSpace(c.Message.Content)
 	if text == "" {
-		return "", fmt.Errorf("deepseek: empty completion (finish_reason %q)", c.FinishReason)
+		return ai.Completion{}, fmt.Errorf("deepseek: empty completion (finish_reason %q)", c.FinishReason)
 	}
-	return text, nil
+	return ai.Completion{Text: text, Usage: ai.Usage{
+		PromptTokens: out.Usage.PromptTokens, CompletionTokens: out.Usage.CompletionTokens,
+	}}, nil
 }
 
 // TestConnection checks the key by listing models, which costs nothing.

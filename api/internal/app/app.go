@@ -19,6 +19,7 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/ai"
 	"github.com/gewall/dnd-forge/api/internal/ai/providers"
 	"github.com/gewall/dnd-forge/api/internal/aiprovider"
+	"github.com/gewall/dnd-forge/api/internal/audit"
 	"github.com/gewall/dnd-forge/api/internal/auth"
 	"github.com/gewall/dnd-forge/api/internal/character"
 	"github.com/gewall/dnd-forge/api/internal/config"
@@ -37,6 +38,7 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/portrait"
 	"github.com/gewall/dnd-forge/api/internal/prompt"
 	"github.com/gewall/dnd-forge/api/internal/quota"
+	"github.com/gewall/dnd-forge/api/internal/stats"
 	"github.com/gewall/dnd-forge/api/internal/storage"
 )
 
@@ -205,6 +207,8 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		quota.NewHandler(portraitSvc, loreSvc),
 		quota.NewSettingsHandler(quota.NewSettings(quota.NewPostgresSettings(pool))),
 		account.NewHandler(accountSvc),
+		stats.NewHandler(stats.NewService(stats.NewPostgresStore(pool))),
+		audit.NewHandler(audit.NewReader(pool)),
 	)
 
 	return &App{
@@ -282,6 +286,8 @@ func OpenAPI() ([]byte, error) {
 		quota.NewHandler(nil, nil),
 		quota.NewSettingsHandler(nil),
 		account.NewHandler(nil),
+		stats.NewHandler(nil),
+		audit.NewHandler(nil),
 	)
 	return srv.API.OpenAPI().MarshalJSON()
 }

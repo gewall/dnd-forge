@@ -19,8 +19,8 @@ type textVendor struct{}
 
 func (textVendor) Type() ProviderType                           { return DeepSeek }
 func (textVendor) TestConnection(context.Context, string) error { return nil }
-func (textVendor) Complete(context.Context, TextInput) (string, error) {
-	return "", nil
+func (textVendor) Complete(context.Context, TextInput) (Completion, error) {
+	return Completion{}, nil
 }
 
 // bareVendor implements no capability.

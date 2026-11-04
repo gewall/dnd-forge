@@ -88,11 +88,24 @@ type TextInput struct {
 	APIKey    string // already decrypted
 }
 
+// Usage is what a text request consumed, as the vendor bills it. Zero when
+// the vendor does not report it.
+type Usage struct {
+	PromptTokens     int
+	CompletionTokens int
+}
+
+// Completion is a written text and its cost.
+type Completion struct {
+	Text  string
+	Usage Usage
+}
+
 // TextProvider writes text with one vendor, with the same error contract
 // as ImageProvider.
 type TextProvider interface {
 	Vendor
-	Complete(ctx context.Context, in TextInput) (string, error)
+	Complete(ctx context.Context, in TextInput) (Completion, error)
 }
 
 // Registry resolves a vendor implementation by type. A vendor's

@@ -59,7 +59,7 @@ func (m *memStore) LoreByID(_ context.Context, id uuid.UUID) (Lore, error) {
 
 func (m *memStore) LoresOf(context.Context, uuid.UUID, uuid.UUID) ([]Lore, error) { return nil, nil }
 
-func (m *memStore) Complete(_ context.Context, id uuid.UUID, content string) error {
+func (m *memStore) Complete(_ context.Context, id uuid.UUID, content string, _ ai.Usage) error {
 	l := m.lores[id]
 	l.Status, l.Content = StatusSucceeded, content
 	m.lores[id] = l
@@ -129,10 +129,10 @@ type fakeText struct {
 
 func (*fakeText) Type() ai.ProviderType                        { return ai.Fake }
 func (*fakeText) TestConnection(context.Context, string) error { return nil }
-func (f *fakeText) Complete(_ context.Context, in ai.TextInput) (string, error) {
+func (f *fakeText) Complete(_ context.Context, in ai.TextInput) (ai.Completion, error) {
 	f.calls++
 	f.got = in
-	return f.reply, f.err
+	return ai.Completion{Text: f.reply}, f.err
 }
 
 type fakeTemplates struct{}
