@@ -178,9 +178,16 @@ func (s *Service) linkOrCreateGoogleUser(ctx context.Context, p GoogleProfile) (
 	}
 }
 
+// refreshReuseGrace is how long a rotated refresh token may be presented
+// again without being treated as theft. The web BFF can race itself: two
+// requests carrying the same cookie both try to refresh, and only the first
+// wins. The loser gets ErrInvalidRefreshToken and picks up the cookie the
+// winner already set.
+const refreshReuseGrace = 30 * time.Second
+
 // Refresh rotates a refresh token and issues a new session. Presenting a
-// token that was already rotated revokes every session of its owner, since
-// it means the token leaked.
+// token that was rotated more than refreshReuseGrace ago revokes every
+// session of its owner, since it means the token leaked.
 func (s *Service) Refresh(ctx context.Context, rawToken string) (Session, error) {
 	var (
 		userID uuid.UUID
@@ -198,6 +205,9 @@ func (s *Service) Refresh(ctx context.Context, rawToken string) (Session, error)
 		}
 		userID = old.UserID
 		if old.RevokedAt != nil {
+			if s.now().Sub(*old.RevokedAt) <= refreshReuseGrace {
+				return ErrInvalidRefreshToken
+			}
 			reused = true
 			return ts.RevokeAllRefreshTokens(ctx, old.UserID)
 		}

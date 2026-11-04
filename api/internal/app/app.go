@@ -44,7 +44,7 @@ import (
 
 const (
 	Title   = "DnD Forge API"
-	Version = "0.6.0"
+	Version = "0.6.1"
 
 	webpQuality = 82
 

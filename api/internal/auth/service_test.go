@@ -116,12 +116,33 @@ func TestRefreshReuseRevokesAllSessions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Replaying the already rotated token signals theft.
+	// Replaying the already rotated token after the grace window signals theft.
+	f.svc.now = func() time.Time { return time.Now().Add(refreshReuseGrace + time.Second) }
 	if _, err := f.svc.Refresh(ctx, first.RefreshToken); !errors.Is(err, ErrInvalidRefreshToken) {
 		t.Fatalf("replay error = %v, want ErrInvalidRefreshToken", err)
 	}
 	if n := f.store.activeTokens(first.User.ID); n != 0 {
 		t.Errorf("active tokens after reuse = %d, want 0", n)
+	}
+}
+
+func TestRefreshReuseWithinGraceKeepsSessions(t *testing.T) {
+	ctx := context.Background()
+	f := newServiceFixture(t, Config{})
+	first, _ := f.svc.Register(ctx, "bard@example.com", "password-panjang", "")
+	if _, err := f.svc.Login(ctx, "bard@example.com", "password-panjang"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.svc.Refresh(ctx, first.RefreshToken); err != nil {
+		t.Fatal(err)
+	}
+
+	// A concurrent request racing the rotation loses, but nobody is logged out.
+	if _, err := f.svc.Refresh(ctx, first.RefreshToken); !errors.Is(err, ErrInvalidRefreshToken) {
+		t.Fatalf("racing refresh error = %v, want ErrInvalidRefreshToken", err)
+	}
+	if n := f.store.activeTokens(first.User.ID); n != 2 {
+		t.Errorf("active tokens after racing refresh = %d, want 2 (rotated + login)", n)
 	}
 }
 
