@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UserNav } from "@/features/auth/user-nav";
 
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
@@ -26,12 +29,12 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
           <ThemeToggle />
-          <Button asChild variant="ghost" className="hidden sm:inline-flex">
-            <Link href="/login">Masuk</Link>
-          </Button>
           <Button asChild className="hidden md:inline-flex">
             <Link href="/builder">Buat karakter</Link>
           </Button>
+          <Suspense fallback={<Skeleton className="size-8 rounded-full" />}>
+            <UserNav />
+          </Suspense>
         </div>
       </div>
     </header>
