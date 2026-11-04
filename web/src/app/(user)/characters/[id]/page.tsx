@@ -7,6 +7,9 @@ import { PageBreadcrumb } from "@/components/layout/page-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { DeleteCharacterButton, PublicToggle } from "@/features/characters/controls";
 import { characterTitle, getCharacter } from "@/features/characters/data";
+import { getAiPanelData } from "@/features/ai/data";
+import { LorePanel } from "@/features/ai/lore-panel";
+import { PortraitPanel } from "@/features/ai/portrait-panel";
 import { DetailSkeleton } from "@/features/gamedata/components";
 import { requireUser } from "@/lib/auth/session";
 
@@ -16,7 +19,7 @@ type Props = PageProps<"/characters/[id]">;
 
 export default function CharacterPage({ params }: Props) {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <Suspense fallback={<DetailSkeleton />}>
         <CharacterDetail params={params} />
       </Suspense>
@@ -29,6 +32,7 @@ async function CharacterDetail({ params }: Pick<Props, "params">) {
   await requireUser(`/characters/${id}`);
   const c = await getCharacter(id);
   if (!c) notFound();
+  const ai = await getAiPanelData(c.id);
 
   return (
     <article>
@@ -56,29 +60,47 @@ async function CharacterDetail({ params }: Pick<Props, "params">) {
         <PublicToggle id={c.id} isPublic={c.isPublic} />
       </div>
 
-      <div className="mt-10 grid gap-10 md:grid-cols-2">
-        <section>
-          <h2 className="text-xl font-semibold">Penampilan</h2>
-          {c.appearance ? (
-            <p className="mt-3 font-serif text-lg leading-relaxed whitespace-pre-line">{c.appearance}</p>
-          ) : (
-            <p className="mt-3 text-muted-foreground">
-              Belum diisi. Tambahkan lewat{" "}
-              <Link href={`/characters/${c.id}/edit`} className="underline underline-offset-2">
-                Ubah
-              </Link>{" "}
-              supaya portrait AI lebih sesuai.
-            </p>
-          )}
-        </section>
-        <section>
-          <h2 className="text-xl font-semibold">Kisah latar</h2>
-          {c.backstory ? (
-            <p className="mt-3 font-serif text-lg leading-relaxed whitespace-pre-line">{c.backstory}</p>
-          ) : (
-            <p className="mt-3 text-muted-foreground">Belum ada kisah latar untuk karakter ini.</p>
-          )}
-        </section>
+      <div className="mt-10 grid gap-10 lg:grid-cols-[22rem_minmax(0,1fr)]">
+        <div className="lg:sticky lg:top-20 lg:self-start">
+          <PortraitPanel
+            characterId={c.id}
+            characterName={c.name}
+            styles={ai.styles}
+            initial={ai.portraits}
+            usage={ai.quota?.portrait ?? null}
+          />
+        </div>
+        <div className="min-w-0 space-y-10">
+          <section>
+            <h2 className="text-xl font-semibold">Penampilan</h2>
+            {c.appearance ? (
+              <p className="mt-3 font-serif text-lg leading-relaxed whitespace-pre-line">{c.appearance}</p>
+            ) : (
+              <p className="mt-3 text-muted-foreground">
+                Belum diisi. Tambahkan lewat{" "}
+                <Link href={`/characters/${c.id}/edit`} className="underline underline-offset-2">
+                  Ubah
+                </Link>{" "}
+                supaya portrait AI lebih sesuai.
+              </p>
+            )}
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold">Kisah latar</h2>
+            {c.backstory ? (
+              <p className="mt-3 max-w-[68ch] font-serif text-lg leading-relaxed whitespace-pre-line">{c.backstory}</p>
+            ) : (
+              <p className="mt-3 text-muted-foreground">Belum ada. Tulis drafnya dengan Lore AI di bawah.</p>
+            )}
+          </section>
+          <LorePanel
+            characterId={c.id}
+            options={ai.loreOptions}
+            initial={ai.lores}
+            usage={ai.quota?.lore ?? null}
+            backstory={c.backstory}
+          />
+        </div>
       </div>
 
       <dl className="mt-10 grid gap-4 border-t pt-6 text-sm sm:grid-cols-3">
