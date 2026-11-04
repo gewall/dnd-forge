@@ -1,0 +1,148 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-alegreya-sans);
+  --font-serif: var(--font-alegreya);
+  --font-heading: var(--font-alegreya);
+  --color-arcane: var(--arcane);
+  --color-arcane-foreground: var(--arcane-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * DnD Forge — modern minimal dengan aksen fantasy.
+ * Kuningan tempa (primary) hanya untuk aksi utama; ungu arkana (arcane)
+ * hanya untuk fitur buatan AI (portrait, lore), jadi warnanya membawa arti.
+ */
+:root {
+  --background: #f4f5f7;
+  --foreground: #1b1e27;
+  --card: #ffffff;
+  --card-foreground: #1b1e27;
+  --popover: #ffffff;
+  --popover-foreground: #1b1e27;
+  --primary: #8a6418;
+  --primary-foreground: #ffffff;
+  --secondary: #e8eaef;
+  --secondary-foreground: #1b1e27;
+  --muted: #e8eaef;
+  --muted-foreground: #5a6072;
+  --accent: #e3e6ec;
+  --accent-foreground: #1b1e27;
+  --destructive: #c2392b;
+  --border: #d6d9e1;
+  --input: #cbd0da;
+  --ring: #8a6418;
+  --arcane: #5b4fb0;
+  --arcane-foreground: #ffffff;
+  --chart-1: #8a6418;
+  --chart-2: #5b4fb0;
+  --chart-3: #2f7d6d;
+  --chart-4: #b4532a;
+  --chart-5: #5a6072;
+  --radius: 0.5rem;
+  --sidebar: #eceef2;
+  --sidebar-foreground: #1b1e27;
+  --sidebar-primary: #8a6418;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e3e6ec;
+  --sidebar-accent-foreground: #1b1e27;
+  --sidebar-border: #d6d9e1;
+  --sidebar-ring: #8a6418;
+}
+
+.dark {
+  --background: #171a23;
+  --foreground: #e8e4da;
+  --card: #1f2330;
+  --card-foreground: #e8e4da;
+  --popover: #1f2330;
+  --popover-foreground: #e8e4da;
+  --primary: #d4a548;
+  --primary-foreground: #171a23;
+  --secondary: #262b3a;
+  --secondary-foreground: #e8e4da;
+  --muted: #262b3a;
+  --muted-foreground: #9a9fb0;
+  --accent: #2a2f3f;
+  --accent-foreground: #e8e4da;
+  --destructive: #e5675a;
+  --border: #2e3344;
+  --input: #363c50;
+  --ring: #d4a548;
+  --arcane: #8b7fd6;
+  --arcane-foreground: #171a23;
+  --chart-1: #d4a548;
+  --chart-2: #8b7fd6;
+  --chart-3: #5fb3a1;
+  --chart-4: #e08a5c;
+  --chart-5: #9a9fb0;
+  --sidebar: #1b1e29;
+  --sidebar-foreground: #e8e4da;
+  --sidebar-primary: #d4a548;
+  --sidebar-primary-foreground: #171a23;
+  --sidebar-accent: #2a2f3f;
+  --sidebar-accent-foreground: #e8e4da;
+  --sidebar-border: #2e3344;
+  --sidebar-ring: #d4a548;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1, h2, h3 {
+    @apply font-heading;
+    text-wrap: balance;
+  }
+}
