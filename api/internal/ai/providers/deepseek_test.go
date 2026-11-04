@@ -29,7 +29,7 @@ func TestDeepSeekComplete(t *testing.T) {
 		t.Fatalf("Complete = %q, %v", text, err)
 	}
 	want := []chatMessage{{Role: "system", Content: "kamu penulis lore"}, {Role: "user", Content: "tulis lore"}}
-	if got.Model != "deepseek-v4-flash" || got.MaxTokens != 900 || got.Stream || len(got.Messages) != 2 ||
+	if got.Model != "deepseek-v4-flash" || got.MaxTokens != 900 || got.Stream || got.Thinking.Type != "disabled" || len(got.Messages) != 2 ||
 		got.Messages[0] != want[0] || got.Messages[1] != want[1] {
 		t.Errorf("request = %+v", got)
 	}

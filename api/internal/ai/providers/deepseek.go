@@ -30,11 +30,16 @@ type chatMessage struct {
 	Content string `json:"content"`
 }
 
+type chatThinking struct {
+	Type string `json:"type"`
+}
+
 type chatRequest struct {
 	Model       string        `json:"model"`
 	Messages    []chatMessage `json:"messages"`
 	MaxTokens   int           `json:"max_tokens,omitempty"`
 	Temperature float64       `json:"temperature"`
+	Thinking    chatThinking  `json:"thinking"`
 	Stream      bool          `json:"stream"`
 }
 
@@ -48,8 +53,14 @@ type chatResponse struct {
 // creativeTemperature follows DeepSeek's advice for creative writing.
 const creativeTemperature = 1.5
 
+// Complete turns thinking off: V4 models think by default, which spends
+// max_tokens on reasoning and can leave the answer empty (finish_reason
+// "length"); lore needs no reasoning, and temperature only applies without it.
 func (d *DeepSeek) Complete(ctx context.Context, in ai.TextInput) (string, error) {
-	req := chatRequest{Model: in.Model, MaxTokens: in.MaxTokens, Temperature: creativeTemperature}
+	req := chatRequest{
+		Model: in.Model, MaxTokens: in.MaxTokens, Temperature: creativeTemperature,
+		Thinking: chatThinking{Type: "disabled"},
+	}
 	if in.System != "" {
 		req.Messages = append(req.Messages, chatMessage{Role: "system", Content: in.System})
 	}
