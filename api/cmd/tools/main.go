@@ -5,6 +5,7 @@
 //	tools seed-admin -email a@b.c [-password ...]  create or promote an admin
 //	tools openapi [-o openapi.json]                write the OpenAPI document
 //	tools gen-keys                                 print fresh secrets for .env
+//	tools orphans [-delete] [-min-age 24h]         list (or delete) storage objects no row uses
 package main
 
 import (
@@ -19,10 +20,12 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/gewall/dnd-forge/api/internal/app"
 	"github.com/gewall/dnd-forge/api/internal/config"
 	"github.com/gewall/dnd-forge/api/internal/db"
+	"github.com/gewall/dnd-forge/api/internal/housekeeping"
 )
 
 const usage = `usage: tools <command> [flags]
@@ -32,7 +35,8 @@ commands:
   seed         insert missing SRD 5.2 game data and guide categories
   seed-admin   create or promote an admin account
   openapi      write the OpenAPI 3.1 document
-  gen-keys     print JWT_PRIVATE_KEY, ENCRYPTION_KEY and INTERNAL_API_KEY`
+  gen-keys     print JWT_PRIVATE_KEY, ENCRYPTION_KEY and INTERNAL_API_KEY
+  orphans      list storage objects no row uses; -delete removes them`
 
 func main() {
 	if len(os.Args) < 2 {
@@ -55,6 +59,8 @@ func main() {
 		err = openAPI(args)
 	case "gen-keys":
 		err = genKeys()
+	case "orphans":
+		err = orphans(ctx, args)
 	default:
 		fmt.Fprintln(os.Stderr, usage)
 		os.Exit(2)
@@ -152,6 +158,36 @@ func openAPI(args []string) error {
 		return err
 	}
 	return os.WriteFile(*out, doc, 0o600)
+}
+
+func orphans(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("orphans", flag.ContinueOnError)
+	del := fs.Bool("delete", false, "delete the orphans instead of only listing them")
+	minAge := fs.Duration("min-age", housekeeping.DefaultMinAge, "skip objects younger than this")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	a, err := app.New(ctx, cfg, slog.Default())
+	if err != nil {
+		return err
+	}
+	defer a.Close()
+
+	find := a.Housekeeping.Orphans
+	verb := "orphan"
+	if *del {
+		find, verb = a.Housekeeping.DeleteOrphans, "deleted"
+	}
+	objs, err := find(ctx, *minAge)
+	for _, o := range objs {
+		fmt.Printf("%s %s (%d bytes, %s)\n", verb, o.Key, o.Size, o.LastModified.Format(time.RFC3339))
+	}
+	fmt.Printf("%d object(s)\n", len(objs))
+	return err
 }
 
 func genKeys() error {

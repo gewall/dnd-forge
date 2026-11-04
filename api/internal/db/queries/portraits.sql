@@ -64,3 +64,39 @@ SELECT latest.* FROM (
 WHERE sqlc.narg(before)::timestamptz IS NULL OR latest.created_at < sqlc.narg(before)
 ORDER BY latest.created_at DESC
 LIMIT sqlc.arg(max_results);
+
+-- Admin moderation ------------------------------------------------------------
+
+-- name: AdminImages :many
+-- Newest first; pass the last item's created_at as before for the next page.
+SELECT g.id, g.character_id, g.user_id, g.model, g.user_prompt, g.style, g.aspect_ratio,
+       g.status, g.error_message, g.storage_key, g.thumb_key, g.is_hidden, g.created_at, g.completed_at,
+       u.email AS user_email, c.name AS character_name, c.is_public AS character_public
+FROM generated_images g
+JOIN users u ON u.id = g.user_id
+LEFT JOIN characters c ON c.id = g.character_id
+WHERE (sqlc.narg(status)::image_status IS NULL OR g.status = sqlc.narg(status))
+  AND (sqlc.narg(hidden)::boolean IS NULL OR g.is_hidden = sqlc.narg(hidden))
+  AND (sqlc.narg(user_id)::uuid IS NULL OR g.user_id = sqlc.narg(user_id))
+  AND (sqlc.narg(before)::timestamptz IS NULL OR g.created_at < sqlc.narg(before))
+ORDER BY g.created_at DESC
+LIMIT sqlc.arg(max_results);
+
+-- name: AdminImageByID :one
+SELECT g.id, g.character_id, g.user_id, g.model, g.user_prompt, g.style, g.aspect_ratio,
+       g.status, g.error_message, g.storage_key, g.thumb_key, g.is_hidden, g.created_at, g.completed_at,
+       u.email AS user_email, c.name AS character_name, c.is_public AS character_public
+FROM generated_images g
+JOIN users u ON u.id = g.user_id
+LEFT JOIN characters c ON c.id = g.character_id
+WHERE g.id = $1;
+
+-- name: LockPortrait :one
+SELECT * FROM generated_images WHERE id = $1 FOR UPDATE;
+
+-- name: SetPortraitHidden :exec
+UPDATE generated_images SET is_hidden = $2 WHERE id = $1;
+
+-- name: ClearPortraitFiles :exec
+-- The row stays for quota and statistics; without files it can never be shown.
+UPDATE generated_images SET storage_key = NULL, thumb_key = NULL, is_hidden = true WHERE id = $1;

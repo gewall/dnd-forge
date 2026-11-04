@@ -24,9 +24,11 @@ import (
 	"github.com/gewall/dnd-forge/api/internal/config"
 	"github.com/gewall/dnd-forge/api/internal/crypto"
 	"github.com/gewall/dnd-forge/api/internal/db"
+	"github.com/gewall/dnd-forge/api/internal/db/sqlc"
 	"github.com/gewall/dnd-forge/api/internal/gamedata"
 	"github.com/gewall/dnd-forge/api/internal/guide"
 	"github.com/gewall/dnd-forge/api/internal/health"
+	"github.com/gewall/dnd-forge/api/internal/housekeeping"
 	"github.com/gewall/dnd-forge/api/internal/httpapi"
 	"github.com/gewall/dnd-forge/api/internal/imaging"
 	"github.com/gewall/dnd-forge/api/internal/lore"
@@ -61,7 +63,9 @@ type App struct {
 	Auth     *auth.Service
 	GameData *gamedata.Service
 	Guide    *guide.Service
-	Server   *httpapi.Server
+	// Housekeeping finds storage objects no row points to.
+	Housekeeping *housekeeping.Service
+	Server       *httpapi.Server
 
 	// jobs runs background work; it only starts with StartWorkers, so the
 	// tools command never executes jobs.
@@ -196,6 +200,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		prompt.NewHandler(promptSvc),
 		moderation.NewHandler(modSvc),
 		portrait.NewHandler(portraitSvc, urls),
+		portrait.NewAdminHandler(portrait.NewAdmin(portrait.NewPostgresAdminStore(pool), store)),
 		lore.NewHandler(loreSvc),
 		quota.NewHandler(portraitSvc, loreSvc),
 		quota.NewSettingsHandler(quota.NewSettings(quota.NewPostgresSettings(pool))),
@@ -203,13 +208,14 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 	)
 
 	return &App{
-		Config:   cfg,
-		Pool:     pool,
-		Auth:     authSvc,
-		GameData: gameSvc,
-		Guide:    guideSvc,
-		Server:   srv,
-		jobs:     jobs,
+		Config:       cfg,
+		Pool:         pool,
+		Auth:         authSvc,
+		GameData:     gameSvc,
+		Guide:        guideSvc,
+		Housekeeping: housekeeping.NewService(store, sqlc.New(pool)),
+		Server:       srv,
+		jobs:         jobs,
 	}, nil
 }
 
@@ -271,6 +277,7 @@ func OpenAPI() ([]byte, error) {
 		prompt.NewHandler(nil),
 		moderation.NewHandler(nil),
 		portrait.NewHandler(nil, nil),
+		portrait.NewAdminHandler(nil),
 		lore.NewHandler(nil),
 		quota.NewHandler(nil, nil),
 		quota.NewSettingsHandler(nil),

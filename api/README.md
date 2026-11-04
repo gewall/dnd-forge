@@ -51,6 +51,15 @@ Upload admin (`POST /v1/admin/uploads`) dikonversi ke WebP maks 1600px oleh enco
 stabil `PUBLIC_BASE_URL/v1/media/content/<id>.webp`, yang menjawab 302 ke URL presigned
 `s3.gewall.my.id` (berlaku `PRESIGN_TTL`). Endpoint media tidak butuh `X-Internal-Key`.
 
+Moderasi portrait: `/v1/admin/images` (URL presigned langsung, termasuk yang disembunyikan),
+`PATCH` untuk sembunyikan/tampilkan, `DELETE` menghapus file dari Garage tapi barisnya tetap ada untuk kuota dan
+statistik. Objek yang tidak dirujuk baris mana pun (lebih tua dari 24 jam) bisa dicek dan dibersihkan:
+
+```
+docker compose exec api /app/tools orphans            # daftar saja
+docker compose exec api /app/tools orphans -delete    # hapus
+```
+
 ## Lisensi konten
 
 Data ras, kelas, dan latar belakang di `internal/gamedata/seed` berasal dari SRD 5.2 (CC BY 4.0);

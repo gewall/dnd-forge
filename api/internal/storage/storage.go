@@ -88,6 +88,29 @@ func (c *Client) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
+// Object is a stored object as listed.
+type Object struct {
+	Key          string
+	Size         int64
+	LastModified time.Time
+}
+
+// List returns every object whose key starts with prefix.
+func (c *Client) List(ctx context.Context, prefix string) ([]Object, error) {
+	var out []Object
+	p := s3.NewListObjectsV2Paginator(c.s3, &s3.ListObjectsV2Input{Bucket: aws.String(c.bucket), Prefix: aws.String(prefix)})
+	for p.HasMorePages() {
+		page, err := p.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("storage: list %s: %w", prefix, err)
+		}
+		for _, o := range page.Contents {
+			out = append(out, Object{Key: aws.ToString(o.Key), Size: aws.ToInt64(o.Size), LastModified: aws.ToTime(o.LastModified)})
+		}
+	}
+	return out, nil
+}
+
 // PresignGet returns a time-limited download URL for key and its lifetime.
 func (c *Client) PresignGet(ctx context.Context, key string) (string, time.Duration, error) {
 	req, err := c.presign.PresignGetObject(ctx,

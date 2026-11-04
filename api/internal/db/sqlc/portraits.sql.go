@@ -12,6 +12,151 @@ import (
 	"github.com/google/uuid"
 )
 
+const adminImageByID = `-- name: AdminImageByID :one
+SELECT g.id, g.character_id, g.user_id, g.model, g.user_prompt, g.style, g.aspect_ratio,
+       g.status, g.error_message, g.storage_key, g.thumb_key, g.is_hidden, g.created_at, g.completed_at,
+       u.email AS user_email, c.name AS character_name, c.is_public AS character_public
+FROM generated_images g
+JOIN users u ON u.id = g.user_id
+LEFT JOIN characters c ON c.id = g.character_id
+WHERE g.id = $1
+`
+
+type AdminImageByIDRow struct {
+	ID              uuid.UUID
+	CharacterID     *uuid.UUID
+	UserID          uuid.UUID
+	Model           string
+	UserPrompt      string
+	Style           string
+	AspectRatio     string
+	Status          ImageStatus
+	ErrorMessage    *string
+	StorageKey      *string
+	ThumbKey        *string
+	IsHidden        bool
+	CreatedAt       time.Time
+	CompletedAt     *time.Time
+	UserEmail       string
+	CharacterName   *string
+	CharacterPublic *bool
+}
+
+func (q *Queries) AdminImageByID(ctx context.Context, id uuid.UUID) (AdminImageByIDRow, error) {
+	row := q.db.QueryRow(ctx, adminImageByID, id)
+	var i AdminImageByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.CharacterID,
+		&i.UserID,
+		&i.Model,
+		&i.UserPrompt,
+		&i.Style,
+		&i.AspectRatio,
+		&i.Status,
+		&i.ErrorMessage,
+		&i.StorageKey,
+		&i.ThumbKey,
+		&i.IsHidden,
+		&i.CreatedAt,
+		&i.CompletedAt,
+		&i.UserEmail,
+		&i.CharacterName,
+		&i.CharacterPublic,
+	)
+	return i, err
+}
+
+const adminImages = `-- name: AdminImages :many
+
+SELECT g.id, g.character_id, g.user_id, g.model, g.user_prompt, g.style, g.aspect_ratio,
+       g.status, g.error_message, g.storage_key, g.thumb_key, g.is_hidden, g.created_at, g.completed_at,
+       u.email AS user_email, c.name AS character_name, c.is_public AS character_public
+FROM generated_images g
+JOIN users u ON u.id = g.user_id
+LEFT JOIN characters c ON c.id = g.character_id
+WHERE ($1::image_status IS NULL OR g.status = $1)
+  AND ($2::boolean IS NULL OR g.is_hidden = $2)
+  AND ($3::uuid IS NULL OR g.user_id = $3)
+  AND ($4::timestamptz IS NULL OR g.created_at < $4)
+ORDER BY g.created_at DESC
+LIMIT $5
+`
+
+type AdminImagesParams struct {
+	Status     *ImageStatus
+	Hidden     *bool
+	UserID     *uuid.UUID
+	Before     *time.Time
+	MaxResults int32
+}
+
+type AdminImagesRow struct {
+	ID              uuid.UUID
+	CharacterID     *uuid.UUID
+	UserID          uuid.UUID
+	Model           string
+	UserPrompt      string
+	Style           string
+	AspectRatio     string
+	Status          ImageStatus
+	ErrorMessage    *string
+	StorageKey      *string
+	ThumbKey        *string
+	IsHidden        bool
+	CreatedAt       time.Time
+	CompletedAt     *time.Time
+	UserEmail       string
+	CharacterName   *string
+	CharacterPublic *bool
+}
+
+// Admin moderation ------------------------------------------------------------
+// Newest first; pass the last item's created_at as before for the next page.
+func (q *Queries) AdminImages(ctx context.Context, arg AdminImagesParams) ([]AdminImagesRow, error) {
+	rows, err := q.db.Query(ctx, adminImages,
+		arg.Status,
+		arg.Hidden,
+		arg.UserID,
+		arg.Before,
+		arg.MaxResults,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AdminImagesRow
+	for rows.Next() {
+		var i AdminImagesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CharacterID,
+			&i.UserID,
+			&i.Model,
+			&i.UserPrompt,
+			&i.Style,
+			&i.AspectRatio,
+			&i.Status,
+			&i.ErrorMessage,
+			&i.StorageKey,
+			&i.ThumbKey,
+			&i.IsHidden,
+			&i.CreatedAt,
+			&i.CompletedAt,
+			&i.UserEmail,
+			&i.CharacterName,
+			&i.CharacterPublic,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const characterForPortrait = `-- name: CharacterForPortrait :one
 SELECT c.id, c.user_id, c.name, c.gender, c.appearance,
        r.name AS race_name, r.visual_prompt AS race_visual,
@@ -61,6 +206,16 @@ func (q *Queries) CharacterForPortrait(ctx context.Context, id uuid.UUID) (Chara
 		&i.BackgroundVisual,
 	)
 	return i, err
+}
+
+const clearPortraitFiles = `-- name: ClearPortraitFiles :exec
+UPDATE generated_images SET storage_key = NULL, thumb_key = NULL, is_hidden = true WHERE id = $1
+`
+
+// The row stays for quota and statistics; without files it can never be shown.
+func (q *Queries) ClearPortraitFiles(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearPortraitFiles, id)
+	return err
 }
 
 const completePortrait = `-- name: CompletePortrait :exec
@@ -226,6 +381,34 @@ func (q *Queries) Gallery(ctx context.Context, arg GalleryParams) ([]GalleryRow,
 	return items, nil
 }
 
+const lockPortrait = `-- name: LockPortrait :one
+SELECT id, character_id, user_id, provider_id, model, user_prompt, final_prompt, style, aspect_ratio, storage_key, thumb_key, status, error_message, is_hidden, created_at, completed_at FROM generated_images WHERE id = $1 FOR UPDATE
+`
+
+func (q *Queries) LockPortrait(ctx context.Context, id uuid.UUID) (GeneratedImage, error) {
+	row := q.db.QueryRow(ctx, lockPortrait, id)
+	var i GeneratedImage
+	err := row.Scan(
+		&i.ID,
+		&i.CharacterID,
+		&i.UserID,
+		&i.ProviderID,
+		&i.Model,
+		&i.UserPrompt,
+		&i.FinalPrompt,
+		&i.Style,
+		&i.AspectRatio,
+		&i.StorageKey,
+		&i.ThumbKey,
+		&i.Status,
+		&i.ErrorMessage,
+		&i.IsHidden,
+		&i.CreatedAt,
+		&i.CompletedAt,
+	)
+	return i, err
+}
+
 const lockUserPortraits = `-- name: LockUserPortraits :exec
 SELECT pg_advisory_xact_lock(hashtextextended('portrait:' || $1::text, 0))
 `
@@ -311,6 +494,20 @@ func (q *Queries) PortraitsByCharacter(ctx context.Context, arg PortraitsByChara
 		return nil, err
 	}
 	return items, nil
+}
+
+const setPortraitHidden = `-- name: SetPortraitHidden :exec
+UPDATE generated_images SET is_hidden = $2 WHERE id = $1
+`
+
+type SetPortraitHiddenParams struct {
+	ID       uuid.UUID
+	IsHidden bool
+}
+
+func (q *Queries) SetPortraitHidden(ctx context.Context, arg SetPortraitHiddenParams) error {
+	_, err := q.db.Exec(ctx, setPortraitHidden, arg.ID, arg.IsHidden)
+	return err
 }
 
 const userDailyQuota = `-- name: UserDailyQuota :one
