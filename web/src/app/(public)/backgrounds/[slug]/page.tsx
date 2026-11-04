@@ -5,10 +5,11 @@ import { Suspense } from "react";
 import { DetailSkeleton } from "@/features/gamedata/components";
 import { getBackground } from "@/features/gamedata/data";
 import { EntryLayout, EntrySection } from "@/features/gamedata/entry-layout";
+import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/backgrounds/[slug]">): Promise<Metadata> {
   const bg = await getBackground((await params).slug);
-  return bg ? { title: bg.name, description: bg.description } : {};
+  return bg ? pageMetadata({ title: bg.name, description: bg.description, path: `/backgrounds/${bg.slug}`, image: bg.imageUrl || undefined }) : {};
 }
 
 export default function BackgroundPage({ params }: PageProps<"/backgrounds/[slug]">) {

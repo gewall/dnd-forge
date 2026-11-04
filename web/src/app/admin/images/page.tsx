@@ -60,7 +60,7 @@ async function Images({ searchParams }: Pick<Props, "searchParams">) {
           <label htmlFor="is" className="mb-1 block text-sm font-medium">
             Status
           </label>
-          <select id="is" name="status" defaultValue={query.status ?? ""} className="h-8 rounded-lg border bg-background px-2 text-sm">
+          <select id="is" name="status" defaultValue={query.status ?? ""} className="h-8 rounded-lg border border-input bg-background px-2 text-sm">
             <option value="">Semua</option>
             <option value="SUCCEEDED">Selesai</option>
             <option value="FAILED">Gagal</option>
@@ -71,7 +71,7 @@ async function Images({ searchParams }: Pick<Props, "searchParams">) {
           <label htmlFor="ih" className="mb-1 block text-sm font-medium">
             Visibilitas
           </label>
-          <select id="ih" name="hidden" defaultValue={query.hidden ?? ""} className="h-8 rounded-lg border bg-background px-2 text-sm">
+          <select id="ih" name="hidden" defaultValue={query.hidden ?? ""} className="h-8 rounded-lg border border-input bg-background px-2 text-sm">
             <option value="">Semua</option>
             <option value="false">Tampil</option>
             <option value="true">Tersembunyi</option>

@@ -6,10 +6,11 @@ import { PageBreadcrumb } from "@/components/layout/page-breadcrumb";
 import { DetailSkeleton } from "@/features/gamedata/components";
 import { ArticleList } from "@/features/guide/components";
 import { getGuideCategory } from "@/features/guide/data";
+import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/guide/[category]">): Promise<Metadata> {
   const category = await getGuideCategory((await params).category);
-  return category ? { title: category.title, description: category.description } : {};
+  return category ? pageMetadata({ title: category.title, description: category.description, path: `/guide/${category.slug}` }) : {};
 }
 
 export default function GuideCategoryPage({ params }: PageProps<"/guide/[category]">) {

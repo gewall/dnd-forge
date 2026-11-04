@@ -51,7 +51,7 @@ async function Articles({ searchParams }: Pick<Props, "searchParams">) {
           <label htmlFor="gc" className="mb-1 block text-sm font-medium">
             Kategori
           </label>
-          <select id="gc" name="categoryId" defaultValue={categoryId ?? ""} className="h-8 rounded-lg border bg-background px-2 text-sm">
+          <select id="gc" name="categoryId" defaultValue={categoryId ?? ""} className="h-8 rounded-lg border border-input bg-background px-2 text-sm">
             <option value="">Semua</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -64,7 +64,7 @@ async function Articles({ searchParams }: Pick<Props, "searchParams">) {
           <label htmlFor="gs" className="mb-1 block text-sm font-medium">
             Status
           </label>
-          <select id="gs" name="status" defaultValue={status ?? ""} className="h-8 rounded-lg border bg-background px-2 text-sm">
+          <select id="gs" name="status" defaultValue={status ?? ""} className="h-8 rounded-lg border border-input bg-background px-2 text-sm">
             <option value="">Semua</option>
             <option value="DRAFT">Draf</option>
             <option value="PUBLISHED">Terbit</option>

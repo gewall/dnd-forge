@@ -72,7 +72,7 @@
   --accent-foreground: #1b1e27;
   --destructive: #c2392b;
   --border: #d6d9e1;
-  --input: #cbd0da;
+  --input: #878d9c; /* 3:1 against background and card (WCAG 1.4.11) */
   --ring: #8a6418;
   --arcane: #5b4fb0;
   --arcane-foreground: #ffffff;
@@ -109,7 +109,7 @@
   --accent-foreground: #e8e4da;
   --destructive: #e5675a;
   --border: #2e3344;
-  --input: #363c50;
+  --input: #686d80; /* 3:1 against background and card */
   --ring: #d4a548;
   --arcane: #8b7fd6;
   --arcane-foreground: #171a23;
@@ -145,5 +145,16 @@
   h1, h2, h3 {
     @apply font-heading;
     text-wrap: balance;
+  }
+}
+/* Respect the OS "reduce motion" setting: skeleton pulses and transitions stop. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

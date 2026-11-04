@@ -58,7 +58,7 @@ async function Users({ searchParams }: Pick<Props, "searchParams">) {
           <label htmlFor="ur" className="mb-1 block text-sm font-medium">
             Peran
           </label>
-          <select id="ur" name="role" defaultValue={role ?? ""} className="h-8 rounded-lg border bg-background px-2 text-sm">
+          <select id="ur" name="role" defaultValue={role ?? ""} className="h-8 rounded-lg border border-input bg-background px-2 text-sm">
             <option value="">Semua</option>
             <option value="USER">Pemain</option>
             <option value="ADMIN">Admin</option>
@@ -68,7 +68,7 @@ async function Users({ searchParams }: Pick<Props, "searchParams">) {
           <label htmlFor="ub" className="mb-1 block text-sm font-medium">
             Status
           </label>
-          <select id="ub" name="banned" defaultValue={banned ?? ""} className="h-8 rounded-lg border bg-background px-2 text-sm">
+          <select id="ub" name="banned" defaultValue={banned ?? ""} className="h-8 rounded-lg border border-input bg-background px-2 text-sm">
             <option value="">Semua</option>
             <option value="false">Aktif</option>
             <option value="true">Diblokir</option>

@@ -5,10 +5,11 @@ import { Suspense } from "react";
 import { DetailSkeleton, TraitList } from "@/features/gamedata/components";
 import { getClass } from "@/features/gamedata/data";
 import { EntryLayout, EntrySection } from "@/features/gamedata/entry-layout";
+import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/classes/[slug]">): Promise<Metadata> {
   const cls = await getClass((await params).slug);
-  return cls ? { title: cls.name, description: cls.description } : {};
+  return cls ? pageMetadata({ title: cls.name, description: cls.description, path: `/classes/${cls.slug}`, image: cls.imageUrl || undefined }) : {};
 }
 
 export default function ClassPage({ params }: PageProps<"/classes/[slug]">) {

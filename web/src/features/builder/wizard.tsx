@@ -77,9 +77,12 @@ function WizardBody({ data, mode }: { data: GameData; mode: WizardMode }) {
   const current = steps[step];
 
   const topRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  // Moving focus to the new step's title tells keyboard and screen reader users where they are.
   const goTo = (i: number) => {
     state.setStep(i);
     topRef.current?.scrollIntoView({ block: "start" });
+    requestAnimationFrame(() => titleRef.current?.focus({ preventScroll: true }));
   };
 
   return (
@@ -87,7 +90,7 @@ function WizardBody({ data, mode }: { data: GameData; mode: WizardMode }) {
       <StepIndicator current={step} draft={draft} data={data} onSelect={goTo} />
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
         <section aria-labelledby="step-title" className="min-w-0">
-          <h2 id="step-title" className="text-2xl font-semibold">
+          <h2 id="step-title" ref={titleRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
             {stepTitles[current.key]}
           </h2>
           <p className="mt-1 text-muted-foreground">{stepHints[current.key]}</p>

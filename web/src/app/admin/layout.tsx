@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { Logo } from "@/components/layout/logo";
+import { SkipLink } from "@/components/layout/skip-link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminMobileNav, AdminNav } from "@/features/admin/nav";
@@ -23,6 +24,7 @@ async function AdminGate({ children }: { children: React.ReactNode }) {
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="flex min-h-full flex-1 flex-col">
+      <SkipLink />
       <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
         <div className="flex h-14 items-center gap-4 px-4 sm:px-6">
           <Suspense fallback={<span className="size-8 md:hidden" />}>
@@ -47,7 +49,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
             <AdminNav />
           </Suspense>
         </aside>
-        <main className="min-w-0 flex-1 px-4 py-8 sm:px-8">
+        <main id="konten" tabIndex={-1} className="min-w-0 flex-1 px-4 py-8 outline-none sm:px-8">
           <Suspense fallback={<AdminSkeleton />}>
             <AdminGate>{children}</AdminGate>
           </Suspense>

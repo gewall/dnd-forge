@@ -54,7 +54,7 @@ async function Audit({ searchParams }: Pick<Props, "searchParams">) {
           <label htmlFor="ae" className="mb-1 block text-sm font-medium">
             Data
           </label>
-          <select id="ae" name="entity" defaultValue={query.entity ?? ""} className="h-8 rounded-lg border bg-background px-2 text-sm">
+          <select id="ae" name="entity" defaultValue={query.entity ?? ""} className="h-8 rounded-lg border border-input bg-background px-2 text-sm">
             <option value="">Semua</option>
             {Object.entries(entities).map(([key, e]) => (
               <option key={key} value={key}>

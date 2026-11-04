@@ -8,6 +8,7 @@ import { DetailSkeleton } from "@/features/gamedata/components";
 import { ArticleList, TableOfContents } from "@/features/guide/components";
 import { getArticle } from "@/features/guide/data";
 import { extractToc } from "@/features/guide/text";
+import { pageMetadata } from "@/lib/seo";
 
 type Props = PageProps<"/guide/[category]/[slug]">;
 
@@ -16,11 +17,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await getArticle(category, slug);
   if (!page) return {};
   const { article } = page;
-  return {
+  return pageMetadata({
+    type: "article",
     title: article.title,
     description: article.excerpt,
-    openGraph: { type: "article", title: article.title, description: article.excerpt, images: article.coverUrl || undefined },
-  };
+    path: `/guide/${category}/${article.slug}`,
+    image: article.coverUrl || undefined,
+  });
 }
 
 export default function ArticlePage({ params }: Props) {

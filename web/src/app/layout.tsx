@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Alegreya, Alegreya_Sans } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -28,6 +28,16 @@ export const metadata: Metadata = {
   },
   description:
     "Panduan bermain berbahasa Indonesia, ensiklopedia ras, kelas, dan latar belakang dari SRD 5.2, serta pembuat karakter langkah demi langkah.",
+  applicationName: "DnD Forge",
+  openGraph: { type: "website", siteName: "DnD Forge", locale: "id_ID" },
+  twitter: { card: "summary_large_image" },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#171a23" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f5f7" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

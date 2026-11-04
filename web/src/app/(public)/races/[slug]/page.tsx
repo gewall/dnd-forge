@@ -5,10 +5,11 @@ import { Suspense } from "react";
 import { DetailSkeleton, TraitList } from "@/features/gamedata/components";
 import { getRace } from "@/features/gamedata/data";
 import { EntryLayout, EntrySection } from "@/features/gamedata/entry-layout";
+import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/races/[slug]">): Promise<Metadata> {
   const race = await getRace((await params).slug);
-  return race ? { title: race.name, description: race.description } : {};
+  return race ? pageMetadata({ title: race.name, description: race.description, path: `/races/${race.slug}`, image: race.imageUrl || undefined }) : {};
 }
 
 export default function RacePage({ params }: PageProps<"/races/[slug]">) {
