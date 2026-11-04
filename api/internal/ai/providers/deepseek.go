@@ -50,8 +50,10 @@ type chatResponse struct {
 	} `json:"choices"`
 }
 
-// creativeTemperature follows DeepSeek's advice for creative writing.
-const creativeTemperature = 1.5
+// creativeTemperature keeps some variety without derailing: 1.5 (DeepSeek's
+// creative-writing advice for older models) made V4 drift into gibberish in
+// longer non-thinking replies.
+const creativeTemperature = 1.0
 
 // Complete turns thinking off: V4 models think by default, which spends
 // max_tokens on reasoning and can leave the answer empty (finish_reason
